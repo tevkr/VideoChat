@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 
 namespace ServerDLL
 {
@@ -10,7 +8,8 @@ namespace ServerDLL
         private ServerCommand() { }
         public enum Commands
         {
-            ChangeUserName
+            ChangeUserName,
+            CreateLobby
         }
         private Commands _command;
         public Commands Command
@@ -18,12 +17,37 @@ namespace ServerDLL
             get { return _command; }
             set { _command = value; }
         }
+        // Смена ника-----------------------
         private string _userName;
         public string UserName
         {
             get { return _userName; }
             set { _userName = value; }
         }
+        // ---------------------------------
+
+        // Создание лобби-------------------
+        private string _lobbyName;
+        public string LobbyName
+        {
+            get { return _lobbyName; }
+            set { _lobbyName = value; }
+        }
+        private int _lobbyCapacity;
+        public int LobbyCapacity
+        {
+            get { return _lobbyCapacity; }
+            set { _lobbyCapacity = value; }
+        }
+        private string _lobbyPassword;
+        public string LobbyPassword
+        {
+            get { return _lobbyPassword; }
+            set { _lobbyPassword = value; }
+        }
+        // ---------------------------------
+
+        // Создание команды сервера (для клиента)
         public static ServerCommand changeUserNameServerCommand(string newUserName)
         {
             ServerCommand result = new ServerCommand();
@@ -31,5 +55,15 @@ namespace ServerDLL
             result.UserName = newUserName;
             return result;
         }
+        public static ServerCommand createLobbyCommand(string lobbyName, int lobbyCapacity, string lobbyPassword)
+        {
+            ServerCommand result = new ServerCommand();
+            result.Command = Commands.CreateLobby;
+            result.LobbyName = lobbyName;
+            result.LobbyCapacity = lobbyCapacity;
+            result.LobbyPassword = lobbyPassword;
+            return result;
+        }
+        // ---------------------------------
     }
 }

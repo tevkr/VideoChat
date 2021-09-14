@@ -1,7 +1,4 @@
 ﻿using ServerDLL;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using WPFClient.Core;
@@ -31,7 +28,8 @@ namespace WPFClient.MVVM.ViewModel
             var task = Task.Factory.StartNew(() =>
             {
                 Server.SendTCP(ServerCommand.changeUserNameServerCommand(UserNameTextBoxText));
-                ServerDLL.ServerResponse.Responses response = Server.listenToServerResponse();
+                ServerResponseConverter serverCommandConverter = new ServerResponseConverter(Server.listenToServerResponse(), 0);
+                ServerDLL.ServerResponse.Responses response = serverCommandConverter.ServerResponse.Response;
                 if (response == ServerDLL.ServerResponse.Responses.Success)
                 {
                     MainViewModel.CurrentView = MainViewModel.mainMenuViewModel;

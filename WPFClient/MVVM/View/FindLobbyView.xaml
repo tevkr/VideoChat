@@ -11,6 +11,9 @@
         <viewModel:FindLobbyViewModel/>
     </UserControl.DataContext>
     <Grid>
-            
+        <Button Content="Вернуться в главное меню" 
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top" 
+                Command="{Binding BackToMainMenuCommand}"/>
     </Grid>
 </UserControl>

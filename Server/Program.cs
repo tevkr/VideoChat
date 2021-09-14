@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -31,6 +32,22 @@ namespace Server
                     Console.WriteLine("No users:(");
                 for (int i = 0; i < Server.Users.Count; i++)
                     Console.WriteLine("[{0}]: {1}", Server.Users[i].Id, Server.Users[i].UserName);
+            }
+            if (cmd.Contains("/lobbies")) // Получить список всех пользователей
+            {
+                if (Server.Users.Count == 0)
+                    Console.WriteLine("No lobbies:(");
+                for (int i = 0; i < Server.lobbies.Count; i++)
+                {
+                    Console.WriteLine("[{0}]: {1}", Server.lobbies[i].Id, Server.lobbies[i].Name);
+                    Console.Write("\t{");
+                    for (int j = 0; j < Server.lobbies[i].UsersCount - 1; j++)
+                    {
+                        Console.Write("{0} ,", Server.lobbies[i].Users[j].UserName);
+                    }
+                    Console.Write("{0}", Server.lobbies[i].Users.Last().UserName);
+                    Console.WriteLine("}");
+                }
             }
             else
             {

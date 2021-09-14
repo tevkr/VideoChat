@@ -1,13 +1,7 @@
 ﻿using ServerDLL;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace WPFClient
@@ -35,14 +29,14 @@ namespace WPFClient
             {
                 int bytesSent = _serverSocket.Send(bytes);
             }
-            catch (Exception e)
+            catch
             {
                 MessageBox.Show("Ошибка при отправке данных по TCP на сервер.");
                 throw;
             }
             
         }
-        public static ServerDLL.ServerResponse.Responses listenToServerResponse()
+        public static byte[] listenToServerResponse()
         {
             try
             {
@@ -50,11 +44,11 @@ namespace WPFClient
                 {
                     byte[] buffer = new byte[8196];
                     int bytesRec = _serverSocket.Receive(buffer);
-                    return ((ServerDLL.ServerResponse)ServerDLL.Deserializer.Deserialize(buffer)).Response;
+                    return buffer;
                 }
-                return ServerDLL.ServerResponse.Responses.Error;
+                return null;
             }
-            catch (Exception e)
+            catch
             {
                 MessageBox.Show("Ошибка при прослушивании TCP сокета.");
                 throw;

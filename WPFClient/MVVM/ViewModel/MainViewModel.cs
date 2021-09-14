@@ -7,6 +7,8 @@ namespace WPFClient.MVVM.ViewModel
     {
         public static FirstLoadViewModel firstLoadViewModel { get; set; }
         public static MainMenuViewModel mainMenuViewModel { get; set; }
+        public static CreateLobbyViewModel createLobbyViewModel { get; set; }
+        public static FindLobbyViewModel findLobbyViewModel { get; set; }
 
         static public event EventHandler CurrentViewChanged;
         private static object _currentView;
@@ -23,6 +25,8 @@ namespace WPFClient.MVVM.ViewModel
         {
             firstLoadViewModel = new FirstLoadViewModel();
             mainMenuViewModel = new MainMenuViewModel();
+            createLobbyViewModel = new CreateLobbyViewModel();
+            findLobbyViewModel = new FindLobbyViewModel();
             CurrentView = firstLoadViewModel;
         }
     }

@@ -12,8 +12,8 @@
     </UserControl.DataContext>
     <Grid>
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Button Content="Создать лобби" Command=""/>
-            <Button Content="Найти лобби" Command=""/>
+            <Button Content="Создать лобби" Command="{Binding CreateLobbyCommand}"/>
+            <Button Content="Найти лобби" Command="{Binding FindLobbyCommand}"/>
             <!--<Button Content="Настройки" Command=""/>-->
         </StackPanel>
     </Grid>

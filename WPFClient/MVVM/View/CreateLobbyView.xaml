@@ -11,7 +11,10 @@
         <viewModel:CreateLobbyViewModel/>
     </UserControl.DataContext>
     <Grid>
-        <Button Content="Вернуться" Width="60" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <Button Content="Вернуться в главное меню" 
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top" 
+                Command="{Binding BackToMainMenuCommand}"/>
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Название: "/>
@@ -25,7 +28,7 @@
                 <TextBlock Text="Пароль: "/>
                 <TextBox MinWidth="212" Text="{Binding LobbyPassword, UpdateSourceTrigger=PropertyChanged}"/> 
             </StackPanel>
-            <Button Content="Создать и подключиться"/>
+            <Button Content="Создать и подключиться" Command="{Binding CreateAndConnectCommand}"/>
         </StackPanel>
     </Grid>
 </UserControl>
