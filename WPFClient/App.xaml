@@ -12,6 +12,15 @@
             <DataTemplate DataType="{x:Type viewModel:MainMenuViewModel}">
                 <view:MainMenuView/>
             </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:SettingsViewModel}">
+                <view:SettingsView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:CreateLobbyViewModel}">
+                <view:CreateLobbyView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:FindLobbyViewModel}">
+                <view:FindLobbyView/>
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

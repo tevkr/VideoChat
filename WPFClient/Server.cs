@@ -26,7 +26,7 @@ namespace WPFClient
                 _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 _serverSocket.Connect(ipEndPoint);
             }
-            catch { MessageBox.Show("Невозможно подключиться к серверу!"); }
+            catch { MessageBox.Show("Невозможно подключиться к серверу."); throw; }
         }
         public static void SendTCP(ServerCommand serverCommand)
         {
@@ -37,20 +37,28 @@ namespace WPFClient
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message);
+                MessageBox.Show("Ошибка при отправке данных по TCP на сервер.");
                 throw;
             }
             
         }
         public static ServerDLL.ServerResponse.Responses listenToServerResponse()
         {
-            while (_serverSocket.Connected)
+            try
             {
-                byte[] buffer = new byte[8196];
-                int bytesRec = _serverSocket.Receive(buffer);
-                return ((ServerDLL.ServerResponse)ServerDLL.Deserializer.Deserialize(buffer)).Response;
+                while (_serverSocket.Connected)
+                {
+                    byte[] buffer = new byte[8196];
+                    int bytesRec = _serverSocket.Receive(buffer);
+                    return ((ServerDLL.ServerResponse)ServerDLL.Deserializer.Deserialize(buffer)).Response;
+                }
+                return ServerDLL.ServerResponse.Responses.Error;
             }
-            return ServerDLL.ServerResponse.Responses.Error;
+            catch (Exception e)
+            {
+                MessageBox.Show("Ошибка при прослушивании TCP сокета.");
+                throw;
+            }
         }
     }
 }

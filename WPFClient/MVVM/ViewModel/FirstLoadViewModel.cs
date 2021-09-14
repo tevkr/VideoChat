@@ -34,11 +34,11 @@ namespace WPFClient.MVVM.ViewModel
                 ServerDLL.ServerResponse.Responses response = Server.listenToServerResponse();
                 if (response == ServerDLL.ServerResponse.Responses.Success)
                 {
-                    MessageBox.Show("Success");
+                    MainViewModel.CurrentView = MainViewModel.mainMenuViewModel;
                 }
-                else
+                else 
                 {
-                    MessageBox.Show("Error");
+                    MessageBox.Show("Невозможно отправить никнейм на сервер.");
                 }
             });
             await task;
