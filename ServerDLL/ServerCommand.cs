@@ -9,7 +9,8 @@ namespace ServerDLL
         public enum Commands
         {
             ChangeUserName,
-            CreateLobby
+            CreateLobby,
+            LeaveLobby
         }
         private Commands _command;
         public Commands Command
@@ -62,6 +63,12 @@ namespace ServerDLL
             result.LobbyName = lobbyName;
             result.LobbyCapacity = lobbyCapacity;
             result.LobbyPassword = lobbyPassword;
+            return result;
+        }
+        public static ServerCommand leaveLobbyCommand()
+        {
+            ServerCommand result = new ServerCommand();
+            result.Command = Commands.LeaveLobby;
             return result;
         }
         // ---------------------------------

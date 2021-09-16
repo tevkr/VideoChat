@@ -21,6 +21,9 @@
             <DataTemplate DataType="{x:Type viewModel:FindLobbyViewModel}">
                 <view:FindLobbyView/>
             </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:LobbyViewModel}">
+                <view:LobbyView/>
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

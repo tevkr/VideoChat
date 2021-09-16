@@ -57,15 +57,23 @@
     </ApplicationDefinition>
     <Compile Include="MVVM\ViewModel\CreateLobbyViewModel.cs" />
     <Compile Include="MVVM\ViewModel\FindLobbyViewModel.cs" />
+    <Compile Include="MVVM\ViewModel\LobbyViewModel.cs" />
     <Compile Include="MVVM\ViewModel\SettingsViewModel.cs" />
+    <Compile Include="MVVM\ViewModel\WebCamBannerViewModel.cs" />
     <Compile Include="MVVM\View\CreateLobbyView.xaml.cs">
       <DependentUpon>CreateLobbyView.xaml</DependentUpon>
     </Compile>
     <Compile Include="MVVM\View\FindLobbyView.xaml.cs">
       <DependentUpon>FindLobbyView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="MVVM\View\LobbyView.xaml.cs">
+      <DependentUpon>LobbyView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MVVM\View\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MVVM\View\WebCamBannerView.xaml.cs">
+      <DependentUpon>WebCamBannerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Server.cs" />
     <Compile Include="ServerResponseConverter.cs" />
@@ -96,11 +104,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="MVVM\View\LobbyView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MVVM\View\MainMenuView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="MVVM\View\SettingsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MVVM\View\WebCamBannerView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

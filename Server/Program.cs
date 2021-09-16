@@ -32,6 +32,7 @@ namespace Server
                     Console.WriteLine("No users:(");
                 for (int i = 0; i < Server.Users.Count; i++)
                     Console.WriteLine("[{0}]: {1}", Server.Users[i].Id, Server.Users[i].UserName);
+                return;
             }
             if (cmd.Contains("/lobbies")) // Получить список всех пользователей
             {
@@ -39,8 +40,8 @@ namespace Server
                     Console.WriteLine("No lobbies:(");
                 for (int i = 0; i < Server.lobbies.Count; i++)
                 {
-                    Console.WriteLine("[{0}]: {1}", Server.lobbies[i].Id, Server.lobbies[i].Name);
-                    Console.Write("\t{");
+                    Console.WriteLine("{0}. [{1}]: {2}", (i + 1), Server.lobbies[i].Id, Server.lobbies[i].Name);
+                    Console.Write("\tUsers: {");
                     for (int j = 0; j < Server.lobbies[i].UsersCount - 1; j++)
                     {
                         Console.Write("{0} ,", Server.lobbies[i].Users[j].UserName);
@@ -48,11 +49,9 @@ namespace Server
                     Console.Write("{0}", Server.lobbies[i].Users.Last().UserName);
                     Console.WriteLine("}");
                 }
+                return;
             }
-            else
-            {
-                Console.WriteLine("Wrong command.");
-            }
+            Console.WriteLine("Wrong command.");
         }
         private static void startServer()
         {

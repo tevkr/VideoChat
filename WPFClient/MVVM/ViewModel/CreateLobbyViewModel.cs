@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using ServerDLL;
 using WPFClient.Core;
+using WPFClient.MVVM.View;
 
 namespace WPFClient.MVVM.ViewModel
 {
@@ -70,8 +71,13 @@ namespace WPFClient.MVVM.ViewModel
                 if (serverResponse.Response == ServerDLL.ServerResponse.Responses.LobbyInfo)
                 {
                     ServerDLL.ServerResponse.Lobby lobby = serverResponse.lobby;
-                    MessageBox.Show("Lobby name: {0}" + lobby.Name + "\nLobby capacity: {1}" + lobby.Capacity + "\nLobby password: {2}" + lobby.Password + 
-                                    "\nUsers count: {3}" + lobby.UsersCount + "\nFirst user id: {4}" + lobby.Users[0].Id + "\nFirst user name:{5}" + lobby.Users[0].UserName + "\nLobby id {6}" + lobby.Id);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MainViewModel.setLobbyView(lobby);
+                    });
+                    MainViewModel.CurrentView = MainViewModel.lobbyView;
+                    /*MessageBox.Show("Lobby name: " + lobby.Name + "\nLobby capacity: " + lobby.Capacity + "\nLobby password: " + lobby.Password + 
+                                    "\nUsers count: " + lobby.UsersCount + "\nFirst user id: " + lobby.Users[0].Id + "\nFirst user name: " + lobby.Users[0].UserName + "\nLobby id " + lobby.Id);*/
                 }
                 else
                 {

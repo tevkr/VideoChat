@@ -82,6 +82,11 @@ namespace Server
                 SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(currentLobby)));
                 return;
             }
+            if (serverCommand.Command == ServerCommand.Commands.LeaveLobby)
+            {
+                currentLobby.removeUser(this);
+                return;
+            }
         }
         public void SendResponseToUser(ServerDLL.ServerResponse.Responses response) // Success or Error
         {

@@ -39,8 +39,11 @@ namespace Server
         }
         public static void EndLobby(Lobby lobby)
         {
-            Console.WriteLine($"Lobby [{lobbies.Last().Id}]:{lobbies.Last().Name} was deleted.");
-            lobbies.RemoveAll(l => l.Id == lobby.Id);
+            if (lobbies.Count != 0)
+            {
+                Console.WriteLine($"Lobby [{lobbies.Last().Id}]:{lobbies.Last().Name} was deleted.");
+                lobbies.RemoveAll(l => l.Id == lobby.Id);
+            }
         }
     }
 }
