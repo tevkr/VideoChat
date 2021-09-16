@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using ServerDLL;
@@ -71,7 +72,7 @@ namespace WPFClient.MVVM.ViewModel
                 {
                     WebCamViews.Add(new WebCamBannerView(CurrentLobby.Users[i].UserName));
                 }
-                //waitForLobbyChanges().Wait();
+                //waitForLobbyChanges();
             }
         }
         private async Task BackToMainMenuTask(object o)
@@ -95,6 +96,8 @@ namespace WPFClient.MVVM.ViewModel
                 {
                     // TODO
                 }
+
+                // if webcams length = 0 => break
             });
             await task;
         }

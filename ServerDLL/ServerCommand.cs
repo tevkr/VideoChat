@@ -10,7 +10,8 @@ namespace ServerDLL
         {
             ChangeUserName,
             CreateLobby,
-            LeaveLobby
+            LeaveLobby,
+            GetLobbies
         }
         private Commands _command;
         public Commands Command
@@ -69,6 +70,12 @@ namespace ServerDLL
         {
             ServerCommand result = new ServerCommand();
             result.Command = Commands.LeaveLobby;
+            return result;
+        }
+        public static ServerCommand getLobbiesCommand()
+        {
+            ServerCommand result = new ServerCommand();
+            result.Command = Commands.GetLobbies;
             return result;
         }
         // ---------------------------------

@@ -87,6 +87,11 @@ namespace Server
                 currentLobby.removeUser(this);
                 return;
             }
+            if (serverCommand.Command == ServerCommand.Commands.GetLobbies)
+            {
+                SendResponseToUser(ServerDLL.ServerResponse.LobbiesResponse(JsonConvert.SerializeObject(Server.lobbies)));
+                return;
+            }
         }
         public void SendResponseToUser(ServerDLL.ServerResponse.Responses response) // Success or Error
         {

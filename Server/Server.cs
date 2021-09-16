@@ -39,7 +39,7 @@ namespace Server
         }
         public static void EndLobby(Lobby lobby)
         {
-            if (lobbies.Count != 0)
+            if (lobbies.Find(l => l.Id == lobby.Id) != null)
             {
                 Console.WriteLine($"Lobby [{lobbies.Last().Id}]:{lobbies.Last().Name} was deleted.");
                 lobbies.RemoveAll(l => l.Id == lobby.Id);

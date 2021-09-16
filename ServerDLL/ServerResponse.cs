@@ -12,7 +12,8 @@ namespace ServerDLL
         {
             Success,
             Error,
-            LobbyInfo
+            LobbyInfo,
+            Lobbies
         }
         private Responses _response;
         public Responses Response
@@ -44,6 +45,26 @@ namespace ServerDLL
             result.Response = Responses.LobbyInfo;
             result.lobby = JsonConvert.DeserializeObject<Lobby>(jsonLobby);
             return result;
+        }
+        public static ServerResponse LobbiesResponse(string jsonLobbies) // LobbyInfo
+        {
+            ServerResponse result = new ServerResponse();
+            result.Response = Responses.Lobbies;
+            result.lobbies = JsonConvert.DeserializeObject<List<Lobby>>(jsonLobbies);
+            for (int i = 0; i < result.lobbies.Count; i++)
+            {
+                if (result.lobbies[i].Password != null)
+                    result.lobbies[i].Password = "Yes";
+                else
+                    result.lobbies[i].Password = "No";
+            }
+            return result;
+        }
+        private List<Lobby> _lobbies;
+        public List<Lobby> lobbies
+        {
+            get { return _lobbies; }
+            set { _lobbies = value; }
         }
         private Lobby _lobby;
         public Lobby lobby

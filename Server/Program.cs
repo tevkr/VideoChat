@@ -36,7 +36,7 @@ namespace Server
             }
             if (cmd.Contains("/lobbies")) // Получить список всех пользователей
             {
-                if (Server.Users.Count == 0)
+                if (Server.lobbies.Count == 0)
                     Console.WriteLine("No lobbies:(");
                 for (int i = 0; i < Server.lobbies.Count; i++)
                 {

@@ -3,10 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:intr="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
              xmlns:local="clr-namespace:WPFClient.MVVM.View"
              xmlns:viewModel="clr-namespace:WPFClient.MVVM.ViewModel"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <intr:Interaction.Triggers>
+        <intr:EventTrigger EventName="Loaded">
+            <intr:InvokeCommandAction Command="{Binding WindowLoaded}"/>
+        </intr:EventTrigger>
+    </intr:Interaction.Triggers>
     <UserControl.DataContext>
         <viewModel:FindLobbyViewModel/>
     </UserControl.DataContext>
@@ -15,5 +21,26 @@
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top" 
                 Command="{Binding BackToMainMenuCommand}"/>
+        <ScrollViewer VerticalScrollBarVisibility="Visible" 
+                      CanContentScroll="True"
+                      Margin="0 20 0 0">
+            <ListView ItemsSource="{Binding Path=LobbiesForListView}" >
+                <ListView.View>
+                    <GridView>
+                        <GridView.Columns>
+                            <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Path=Name}" />
+                            <GridViewColumn Header="Password" DisplayMemberBinding="{Binding Path=Password}" />
+                            <GridViewColumn Header="Users count" DisplayMemberBinding="{Binding Path=CurrentUsers}" />
+                            <GridViewColumn Header="Capacity" DisplayMemberBinding="{Binding Path=Capacity}" />
+                        </GridView.Columns>
+                    </GridView>
+                </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <EventSetter Event="MouseDoubleClick" Handler="JoinLobbyHandler" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+        </ScrollViewer>
     </Grid>
 </UserControl>

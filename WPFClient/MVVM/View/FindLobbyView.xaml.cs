@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Interactivity;
+using WPFClient.MVVM.ViewModel;
 
 namespace WPFClient.MVVM.View
 {
@@ -23,6 +25,22 @@ namespace WPFClient.MVVM.View
         public FindLobbyView()
         {
             InitializeComponent();
+        }
+
+        private async void JoinLobbyHandler(object sender, MouseButtonEventArgs e)
+        {
+            string id = ((FindLobbyViewModel.LobbyForListView)((ListViewItem)sender).Content).Id;
+            string password = ((FindLobbyViewModel.LobbyForListView)((ListViewItem)sender).Content).Password;
+            if (password == "Yes")
+            {
+                string typedPassword = Microsoft.VisualBasic.Interaction.InputBox("Введите пароль и нажмите ок для попытки входа в лобби.", "Введите пароль", "",
+                    (int)Application.Current.MainWindow.Left + 150, (int)Application.Current.MainWindow.Top + 150);
+                MessageBox.Show(typedPassword);
+            }
+            else if (password == "No")
+            {
+                
+            }
         }
     }
 }
