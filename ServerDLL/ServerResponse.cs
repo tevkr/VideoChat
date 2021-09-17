@@ -13,7 +13,9 @@ namespace ServerDLL
             Success,
             Error,
             LobbyInfo,
-            Lobbies
+            Lobbies,
+            UserJoined,
+            UserLeaved
         }
         private Responses _response;
         public Responses Response
@@ -46,7 +48,7 @@ namespace ServerDLL
             result.lobby = JsonConvert.DeserializeObject<Lobby>(jsonLobby);
             return result;
         }
-        public static ServerResponse LobbiesResponse(string jsonLobbies) // LobbyInfo
+        public static ServerResponse LobbiesResponse(string jsonLobbies) // Lobbies
         {
             ServerResponse result = new ServerResponse();
             result.Response = Responses.Lobbies;
@@ -58,6 +60,26 @@ namespace ServerDLL
                 else
                     result.lobbies[i].Password = "No";
             }
+            return result;
+        }
+        private User _user;
+        public User user
+        {
+            get { return _user; }
+            set { _user = value; }
+        }
+        public static ServerResponse UserJoinedResponse(string jsonUser) // UserJoined
+        {
+            ServerResponse result = new ServerResponse();
+            result.Response = Responses.UserJoined;
+            result.user = JsonConvert.DeserializeObject<User>(jsonUser);
+            return result;
+        }
+        public static ServerResponse UserLeavedResponse(string jsonUser) // UserJoined
+        {
+            ServerResponse result = new ServerResponse();
+            result.Response = Responses.UserLeaved;
+            result.user = JsonConvert.DeserializeObject<User>(jsonUser);
             return result;
         }
         private List<Lobby> _lobbies;

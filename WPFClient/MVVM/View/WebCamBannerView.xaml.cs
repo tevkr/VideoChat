@@ -22,11 +22,15 @@ namespace WPFClient.MVVM.View
     public partial class WebCamBannerView : UserControl
     {
         private WebCamBannerViewModel currentViewModel;
-        public WebCamBannerView(string username)
+        public string Username { get; set; }
+        public string UserId { get; set; }
+        public WebCamBannerView(string username, string userId)
         {
             InitializeComponent();
-            currentViewModel = new WebCamBannerViewModel(username);
+            currentViewModel = new WebCamBannerViewModel(username, userId);
             this.DataContext = currentViewModel;
+            Username = username;
+            UserId = userId;
         }
     }
 }

@@ -42,7 +42,7 @@ namespace WPFClient
             {
                 while (_serverSocket.Connected)
                 {
-                    _serverSocket.ReceiveTimeout = 1000;
+                    //_serverSocket.ReceiveTimeout = 1000;
                     byte[] buffer = new byte[8196];
                     int bytesRec = _serverSocket.Receive(buffer);
                     return buffer;

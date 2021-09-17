@@ -52,7 +52,6 @@ namespace WPFClient.MVVM.ViewModel
             }
         }
         public AsyncRelayCommand WindowLoaded { get; set; }
-        public AsyncRelayCommand LobbySelected { get; set; }
         private List<ServerDLL.ServerResponse.Lobby> _lobbies;
 
         public List<ServerDLL.ServerResponse.Lobby> Lobbies
@@ -69,21 +68,12 @@ namespace WPFClient.MVVM.ViewModel
         public FindLobbyViewModel()
         {
             WindowLoaded = new AsyncRelayCommand(async (o) => await getLobbies(o));
-            LobbySelected = new AsyncRelayCommand(async (o) => await lobbySelectedTask(o));
             LobbiesForListView = new ObservableCollection<LobbyForListView>();
             uiContext = SynchronizationContext.Current;
             BackToMainMenuCommand = new RelayCommand(o =>
             {
                 MainViewModel.CurrentView = MainViewModel.mainMenuViewModel;
             });
-        }
-        private async Task lobbySelectedTask(object o)
-        {
-            var task = Task.Factory.StartNew(() =>
-            {
-                MessageBox.Show("123");
-            });
-            await task;
         }
         private async Task getLobbies(object o)
         {

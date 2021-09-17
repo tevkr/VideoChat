@@ -28,6 +28,8 @@ namespace WPFClient.MVVM.ViewModel
                 WebCamViewsChanged?.Invoke(null, EventArgs.Empty);
             }
         }
+        private int _lobbyUsers;
+        private int _lobbyCapacity;
         private string _lobbyId;
         public string LobbyId
         {
@@ -63,24 +65,30 @@ namespace WPFClient.MVVM.ViewModel
         {
             _webCamViews = new ObservableCollection<WebCamBannerView>();
             BackToMainMenuCommand = new AsyncRelayCommand(async (o) => await BackToMainMenuTask(o));
+            _currentUserLeaved = false;
             if (CurrentLobby != null)
             {
                 LobbyId = CurrentLobby.Id;
                 LobbyName = CurrentLobby.Name;
                 LobbyUserStats = $"{CurrentLobby.UsersCount}/{CurrentLobby.Capacity}";
+                _lobbyCapacity = CurrentLobby.Capacity;
+                _lobbyUsers = CurrentLobby.UsersCount;
                 for (int i = 0; i < CurrentLobby.UsersCount; i++)
                 {
-                    WebCamViews.Add(new WebCamBannerView(CurrentLobby.Users[i].UserName));
+                    WebCamViews.Add(new WebCamBannerView(CurrentLobby.Users[i].UserName, CurrentLobby.Users[i].Id));
                 }
-                //waitForLobbyChanges();
+                waitForLobbyChanges();
             }
         }
+
+        private bool _currentUserLeaved;
         private async Task BackToMainMenuTask(object o)
         {
             var task = Task.Factory.StartNew(() =>
             {
                 Server.SendTCP(ServerCommand.leaveLobbyCommand());
                 MainViewModel.CurrentView = MainViewModel.mainMenuViewModel;
+                _currentUserLeaved = true;
             });
             await task;
         }
@@ -88,16 +96,39 @@ namespace WPFClient.MVVM.ViewModel
         {
             var task = Task.Factory.StartNew(() =>
             {
-                // TODO while true
-
-                ServerResponseConverter serverCommandConverter = new ServerResponseConverter(Server.listenToServerResponse(), 0);
-                ServerDLL.ServerResponse.Responses response = serverCommandConverter.ServerResponse.Response;
-                if (response == ServerDLL.ServerResponse.Responses.LobbyInfo)
+                while (true)
                 {
-                    // TODO
+                    ServerResponseConverter serverCommandConverter = new ServerResponseConverter(Server.listenToServerResponse(), 0);
+                    ServerDLL.ServerResponse.Responses response = serverCommandConverter.ServerResponse.Response;
+                    if (response == ServerDLL.ServerResponse.Responses.UserJoined)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            _lobbyUsers++;
+                            LobbyUserStats = $"{_lobbyUsers}/{_lobbyCapacity}";
+                            WebCamViews.Add(new WebCamBannerView(serverCommandConverter.ServerResponse.user.UserName,
+                                serverCommandConverter.ServerResponse.user.Id));
+                        });
+                    }
+                    else if (response == ServerDLL.ServerResponse.Responses.UserLeaved)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            _lobbyUsers--;
+                            LobbyUserStats = $"{_lobbyUsers}/{_lobbyCapacity}";
+                            foreach (var webCamView in WebCamViews.ToArray())
+                            {
+                                if (((WebCamBannerViewModel)webCamView.DataContext).UserId ==
+                                    serverCommandConverter.ServerResponse.user.Id)
+                                {
+                                    WebCamViews.Remove(webCamView);
+                                }
+                            }
+                        });
+                    }
+                    if (_lobbyUsers <= 0 || _currentUserLeaved)
+                        break;
                 }
-
-                // if webcams length = 0 => break
             });
             await task;
         }

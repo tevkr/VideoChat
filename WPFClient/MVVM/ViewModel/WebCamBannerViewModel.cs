@@ -20,9 +20,21 @@ namespace WPFClient.MVVM.ViewModel
                 OnPropertyChanged(nameof(UserName));
             }
         }
-        public WebCamBannerViewModel(string username)
+        private string _userId;
+
+        public string UserId
+        {
+            get { return _userId; }
+            set
+            {
+                _userId = value;
+                OnPropertyChanged(nameof(UserId));
+            }
+        }
+        public WebCamBannerViewModel(string username, string userId)
         {
             UserName = username;
+            UserId = userId;
         }
     }
 }

@@ -11,7 +11,8 @@ namespace ServerDLL
             ChangeUserName,
             CreateLobby,
             LeaveLobby,
-            GetLobbies
+            GetLobbies,
+            JoinLobby
         }
         private Commands _command;
         public Commands Command
@@ -49,6 +50,15 @@ namespace ServerDLL
         }
         // ---------------------------------
 
+        // Присоединение к лобби-------------------
+        private string _lobbyId;
+        public string LobbyId
+        {
+            get { return _lobbyId; }
+            set { _lobbyId = value; }
+        }
+        // ---------------------------------
+
         // Создание команды сервера (для клиента)
         public static ServerCommand changeUserNameServerCommand(string newUserName)
         {
@@ -76,6 +86,14 @@ namespace ServerDLL
         {
             ServerCommand result = new ServerCommand();
             result.Command = Commands.GetLobbies;
+            return result;
+        }
+        public static ServerCommand joinLobbyCommand(string lobbyId, string lobbyPassword)
+        {
+            ServerCommand result = new ServerCommand();
+            result.Command = Commands.JoinLobby;
+            result.LobbyId = lobbyId;
+            result.LobbyPassword = lobbyPassword;
             return result;
         }
         // ---------------------------------

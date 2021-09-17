@@ -92,6 +92,37 @@ namespace Server
                 SendResponseToUser(ServerDLL.ServerResponse.LobbiesResponse(JsonConvert.SerializeObject(Server.lobbies)));
                 return;
             }
+            if (serverCommand.Command == ServerCommand.Commands.JoinLobby)
+            {
+                Lobby temp = Server.lobbies.Find(l => serverCommand.LobbyId == l.Id);
+                if (temp != null)
+                {
+                    if (temp.Password != string.Empty || temp.Password != null)
+                    {
+                        if (serverCommand.LobbyPassword == temp.Password)
+                        {
+                            currentLobby = temp;
+                            currentLobby.addUser(this);
+                            SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(currentLobby)));
+                        }
+                        else
+                        {
+                            SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
+                        }
+                    }
+                    else
+                    {
+                        currentLobby = temp;
+                        currentLobby.addUser(this);
+                        SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(currentLobby)));
+                    }
+                }
+                else
+                {
+                    SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
+                }
+                return;
+            }
         }
         public void SendResponseToUser(ServerDLL.ServerResponse.Responses response) // Success or Error
         {

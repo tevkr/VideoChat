@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using ServerDLL;
 
 namespace Server
 {
@@ -42,9 +44,21 @@ namespace Server
         }
         public void removeUser(User user)
         {
+            foreach (var u in Users) // Оповещение пользователей об отключении
+            {
+                u.SendResponseToUser(ServerResponse.UserLeavedResponse(JsonConvert.SerializeObject(user)));
+            }
             Users.RemoveAll(u => u.Id == user.Id);
             if (Users.Count == 0)
                 Server.EndLobby(this);
+        }
+        public void addUser(User user)
+        {
+            foreach (var u in Users) // Оповещение пользователей о новом подключении
+            {
+                u.SendResponseToUser(ServerResponse.UserJoinedResponse(JsonConvert.SerializeObject(user)));
+            }
+            Users.Add(user);
         }
     }
 }
