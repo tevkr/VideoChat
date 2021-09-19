@@ -17,36 +17,37 @@
             <TextBlock Text="{Binding LobbyName}"/>
             <TextBlock Text="{Binding LobbyUserStats}"/>
         </StackPanel>
-        <ListBox ItemsSource="{Binding Path=WebCamViews}" 
-                 Background="Transparent"
-                 BorderThickness="0"
-                 Margin="0 70 0 0">
-            <ListBox.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel Orientation="Horizontal"/>
-                </ItemsPanelTemplate>
-            </ListBox.ItemsPanel>
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="{x:Type ListBoxItem}">
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                                <ContentPresenter Margin="0 0 20 20"
-                                                          Height="310"
-                                                          Width="310">
-                                </ContentPresenter>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </ListBox.ItemContainerStyle>
-            <ListBox.Template>
-                <ControlTemplate TargetType="ItemsControl">
-                    <Border>
-                        <ItemsPresenter/>
-                    </Border>
-                </ControlTemplate>
-            </ListBox.Template>
-        </ListBox>
+        <ScrollViewer Margin="0 20 0 0">
+            <ListBox ItemsSource="{Binding Path=WebCamViews}" 
+                     Background="Transparent"
+                     BorderThickness="0">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="{x:Type ListBoxItem}">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                                    <ContentPresenter Margin="0 0 20 20"
+                                                      Height="310"
+                                                      Width="310">
+                                    </ContentPresenter>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.Template>
+                    <ControlTemplate TargetType="ItemsControl">
+                        <Border>
+                            <ItemsPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </ListBox.Template>
+            </ListBox>
+        </ScrollViewer>
     </Grid>
 </UserControl>

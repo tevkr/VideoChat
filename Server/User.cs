@@ -46,8 +46,7 @@ namespace Server
                 }
                 catch
                 {
-                    if (currentLobby != null)
-                        currentLobby.removeUser(this);
+                    currentLobbyRemove();
                     Server.EndUser(this); 
                     return; 
                 }
@@ -70,13 +69,22 @@ namespace Server
         {
             if (serverCommand.Command == ServerCommand.Commands.ChangeUserName)
             {
+                if (String.IsNullOrEmpty(serverCommand.UserName))
+                {
+                    SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
+                    return;
+                }
                 _userName = serverCommand.UserName;
                 SendResponseToUser(ServerDLL.ServerResponse.Responses.Success);
                 return;
             }
             if (serverCommand.Command == ServerCommand.Commands.CreateLobby)
             {
-                
+                if (serverCommand.LobbyCapacity < 2  || serverCommand.LobbyCapacity > 8 || String.IsNullOrEmpty(serverCommand.LobbyName))
+                {
+                    SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
+                    return;
+                }
                 currentLobby = Server.NewLobby(serverCommand.LobbyName, serverCommand.LobbyCapacity, 
                     serverCommand.LobbyPassword, this);
                 SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(currentLobby)));
@@ -84,7 +92,7 @@ namespace Server
             }
             if (serverCommand.Command == ServerCommand.Commands.LeaveLobby)
             {
-                currentLobby.removeUser(this);
+                currentLobbyRemove();
                 return;
             }
             if (serverCommand.Command == ServerCommand.Commands.GetLobbies)
@@ -95,9 +103,9 @@ namespace Server
             if (serverCommand.Command == ServerCommand.Commands.JoinLobby)
             {
                 Lobby temp = Server.lobbies.Find(l => serverCommand.LobbyId == l.Id);
-                if (temp != null)
+                if (temp != null && temp.UsersCount != temp.Capacity)
                 {
-                    if (temp.Password != string.Empty || temp.Password != null)
+                    if (!String.IsNullOrEmpty(temp.Password))
                     {
                         if (serverCommand.LobbyPassword == temp.Password)
                         {
@@ -134,8 +142,7 @@ namespace Server
             catch (Exception e)
             {
                 Console.WriteLine("Error with send command: {0}.", e.Message);
-                if (currentLobby != null)
-                    currentLobby.removeUser(this);
+                currentLobbyRemove();
                 Server.EndUser(this);
             }
         }
@@ -149,10 +156,17 @@ namespace Server
             catch (Exception e)
             {
                 Console.WriteLine("Error with send command: {0}.", e.Message);
-                if (currentLobby != null)
-                    currentLobby.removeUser(this);
+                currentLobbyRemove();
                 Server.EndUser(this);
             }
+        }
+
+        private void currentLobbyRemove()
+        {
+            Lobby temp = currentLobby;
+            currentLobby = null;
+            if (temp != null)
+                temp.removeUser(this);
         }
     }
 }

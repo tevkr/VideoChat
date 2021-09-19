@@ -55,7 +55,7 @@ namespace ServerDLL
             result.lobbies = JsonConvert.DeserializeObject<List<Lobby>>(jsonLobbies);
             for (int i = 0; i < result.lobbies.Count; i++)
             {
-                if (result.lobbies[i].Password != null)
+                if (!String.IsNullOrEmpty(result.lobbies[i].Password))
                     result.lobbies[i].Password = "Yes";
                 else
                     result.lobbies[i].Password = "No";

@@ -24,9 +24,12 @@ namespace Server
         {
             try
             {
-                user.End();
-                Users.Remove(user);
-                Console.WriteLine("User {0} has been disconnected.", user.UserName);
+                if (Users.Contains(user))
+                {
+                    user.End();
+                    Users.Remove(user);
+                    Console.WriteLine("User {0} has been disconnected.", user.UserName);
+                }
             }
             catch (Exception e) { Console.WriteLine("Error with endClient: {0}.", e.Message); }
         }
