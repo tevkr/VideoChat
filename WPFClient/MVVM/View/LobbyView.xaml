@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:local="clr-namespace:WPFClient.MVVM.View"
              xmlns:viewModel="clr-namespace:WPFClient.MVVM.ViewModel"
              mc:Ignorable="d" 
@@ -11,8 +12,15 @@
         
         <StackPanel VerticalAlignment="Top"
                     HorizontalAlignment="Left">
-            <Button Content="Выйти из лобби"
-                    Command="{Binding BackToMainMenuCommand}"/>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Выйти из лобби"
+                        Command="{Binding BackToMainMenuCommand}"/>
+                <ComboBox Width="100" ItemsSource="{Binding VideoDevices}"
+                          DisplayMemberPath="Name"
+                          SelectedItem="{Binding Path=SelectedFilterInfo}"
+                          x:Name="VideoDevicesComboBox"/>
+                <CheckBox Content="Веб-камера" />
+            </StackPanel>
             <TextBlock Text="{Binding LobbyId}"/>
             <TextBlock Text="{Binding LobbyName}"/>
             <TextBlock Text="{Binding LobbyUserStats}"/>

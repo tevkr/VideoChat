@@ -8,7 +8,7 @@
              d:DesignHeight="310" d:DesignWidth="310">
     <Grid>
         <StackPanel Margin="0 30 0 0">
-            <Image Height="250" Width="250"/>
+            <Image Height="250" Width="250" Source="{Binding VideoFrame}"/>
             <TextBlock Text="{Binding UserName}" HorizontalAlignment="Center" FontSize="20"/>
         </StackPanel>
     </Grid>

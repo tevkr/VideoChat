@@ -28,5 +28,6 @@ namespace WPFClient.MVVM.View
             currentViewModel = new LobbyViewModel(lobby);
             this.DataContext = currentViewModel;
         }
+
     }
 }
