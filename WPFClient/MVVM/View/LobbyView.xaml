@@ -19,7 +19,7 @@
                           DisplayMemberPath="Name"
                           SelectedItem="{Binding Path=SelectedFilterInfo}"
                           x:Name="VideoDevicesComboBox"/>
-                <CheckBox Content="Веб-камера" />
+                <CheckBox Content="Веб-камера" IsChecked="{Binding SwitchWebCam, Mode=TwoWay}" />
             </StackPanel>
             <TextBlock Text="{Binding LobbyId}"/>
             <TextBlock Text="{Binding LobbyName}"/>

@@ -12,6 +12,7 @@ namespace ServerDLL
         {
             Success,
             Error,
+            NameChanged,
             LobbyInfo,
             Lobbies,
             UserJoined,
@@ -39,6 +40,13 @@ namespace ServerDLL
         {
             ServerResponse result = new ServerResponse();
             result.Response = Responses.Error;
+            return result;
+        }
+        public static ServerResponse NameChangedResponse(string jsonUser) // NameChanged
+        {
+            ServerResponse result = new ServerResponse();
+            result.Response = Responses.NameChanged;
+            result.user = JsonConvert.DeserializeObject<User>(jsonUser);
             return result;
         }
         public static ServerResponse LobbyInfoResponse(string jsonLobby) // LobbyInfo

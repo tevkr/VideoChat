@@ -8,8 +8,8 @@ namespace WPFClient
 {
     public static class Server
     {
-        private const string _serverHost = "127.0.0.1";
-        private const int _serverPort = 9933;
+        public const string _serverHost = "192.168.1.214";
+        public const int _serverPort = 9933;
         private static Socket _serverSocket;
         public static Socket ServerSocket { get { return _serverSocket; } }
         public static void ConnectTCP()

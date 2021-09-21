@@ -52,6 +52,26 @@ namespace Server
                 }
             }
         }
+        private void UDPlistener()
+        {
+            while (true)
+            {
+                try
+                {
+                    byte[] buffer = new byte[8000];
+                    int bytesRec = _handler.Receive(buffer);
+                    ServerCommandConverter serverCommandConverter = new ServerCommandConverter(buffer, bytesRec);
+                    ServerCommand serverCommand = serverCommandConverter.ServerCommand;
+                    handleCommand(serverCommand);
+                }
+                catch
+                {
+                    currentLobbyRemove();
+                    Server.EndUser(this);
+                    return;
+                }
+            }
+        }
         public void End()
         {
             try
@@ -75,7 +95,7 @@ namespace Server
                     return;
                 }
                 _userName = serverCommand.UserName;
-                SendResponseToUser(ServerDLL.ServerResponse.Responses.Success);
+                SendResponseToUser(ServerResponse.NameChangedResponse(JsonConvert.SerializeObject(this)));
                 return;
             }
             if (serverCommand.Command == ServerCommand.Commands.CreateLobby)

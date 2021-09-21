@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -24,6 +27,7 @@ namespace WPFClient.MVVM.ViewModel
         public static AsyncRelayCommand BackToMainMenuCommand { get; set; }
 
         static public event EventHandler WebCamViewsChanged;
+        private static WebCamBannerView _localWebCamView;
         private static ObservableCollection<WebCamBannerView> _webCamViews;
         public static ObservableCollection<WebCamBannerView> WebCamViews
         {
@@ -34,7 +38,7 @@ namespace WPFClient.MVVM.ViewModel
                 WebCamViewsChanged?.Invoke(null, EventArgs.Empty);
             }
         }
-        private int _lobbyUsers;
+        private int _usersCount;
         private int _lobbyCapacity;
         private string _lobbyId;
         public string LobbyId
@@ -83,17 +87,28 @@ namespace WPFClient.MVVM.ViewModel
             }
         }
 
-
+        private static UdpClient udpClient = new UdpClient();
+        private static IPEndPoint anotherClientEndPoint = new IPEndPoint(IPAddress.Parse(Server._serverHost), Server._serverPort);
         public static VideoCaptureDevice videoSource;
         private static void VideoSource_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
         {
-            for (int i = 0; i < WebCamViews.Count; i++)
+            var bmp = new Bitmap(eventArgs.Frame, 250, 250);
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                Application.Current.Dispatcher.Invoke(() =>
+                ((WebCamBannerViewModel) _localWebCamView.DataContext).VideoFrameBitmap = bmp;
+            });
+            try
+            {
+                using (var ms = new MemoryStream())
                 {
-                    ((WebCamBannerViewModel) WebCamViews[i].DataContext).VideoFrameBitmap =
-                        new Bitmap(eventArgs.Frame, 250, 250);
-                });
+                    bmp.Save(ms, ImageFormat.Jpeg);
+                    var bytes = ms.ToArray();
+                    udpClient.Send(bytes, bytes.Length, anotherClientEndPoint);
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
             }
         }
         private FilterInfo _selectedFilterInfo;
@@ -135,19 +150,17 @@ namespace WPFClient.MVVM.ViewModel
                 LobbyName = CurrentLobby.Name;
                 LobbyUserStats = $"{CurrentLobby.UsersCount}/{CurrentLobby.Capacity}";
                 _lobbyCapacity = CurrentLobby.Capacity;
-                _lobbyUsers = CurrentLobby.UsersCount;
+                _usersCount = CurrentLobby.UsersCount;
                 for (int i = 0; i < CurrentLobby.UsersCount; i++)
                 {
                     WebCamViews.Add(new WebCamBannerView(CurrentLobby.Users[i].UserName, CurrentLobby.Users[i].Id));
+                    if (CurrentLobby.Users[i].Id == Application.Current.Properties["LocalUserId"].ToString())
+                        _localWebCamView = WebCamViews.Last();
                 }
                 waitForLobbyChanges();
             }
         }
 
-        ~LobbyViewModel()
-        {
-            
-        }
 
         private bool _currentUserLeaved;
         private async Task BackToMainMenuTask(object o)
@@ -173,8 +186,8 @@ namespace WPFClient.MVVM.ViewModel
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            _lobbyUsers++;
-                            LobbyUserStats = $"{_lobbyUsers}/{_lobbyCapacity}";
+                            _usersCount++;
+                            LobbyUserStats = $"{_usersCount}/{_lobbyCapacity}";
                             WebCamViews.Add(new WebCamBannerView(serverCommandConverter.ServerResponse.user.UserName,
                                 serverCommandConverter.ServerResponse.user.Id));
                         });
@@ -183,8 +196,8 @@ namespace WPFClient.MVVM.ViewModel
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            _lobbyUsers--;
-                            LobbyUserStats = $"{_lobbyUsers}/{_lobbyCapacity}";
+                            _usersCount--;
+                            LobbyUserStats = $"{_usersCount}/{_lobbyCapacity}";
                             foreach (var webCamView in WebCamViews.ToArray())
                             {
                                 if (((WebCamBannerViewModel)webCamView.DataContext).UserId ==
@@ -195,7 +208,7 @@ namespace WPFClient.MVVM.ViewModel
                             }
                         });
                     }
-                    if (_lobbyUsers <= 0 || _currentUserLeaved)
+                    if (_usersCount <= 0 || _currentUserLeaved)
                         break;
                 }
             });

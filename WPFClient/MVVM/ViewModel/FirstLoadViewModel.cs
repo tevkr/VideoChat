@@ -30,8 +30,10 @@ namespace WPFClient.MVVM.ViewModel
                 Server.SendTCP(ServerCommand.changeUserNameServerCommand(UserNameTextBoxText));
                 ServerResponseConverter serverCommandConverter = new ServerResponseConverter(Server.listenToServerResponse(), 0);
                 ServerDLL.ServerResponse.Responses response = serverCommandConverter.ServerResponse.Response;
-                if (response == ServerDLL.ServerResponse.Responses.Success)
+                if (response == ServerDLL.ServerResponse.Responses.NameChanged)
                 {
+                    Application.Current.Properties["LocalUserId"] = serverCommandConverter.ServerResponse.user.Id;
+                    MessageBox.Show(Application.Current.Properties["LocalUserId"].ToString());
                     MainViewModel.CurrentView = MainViewModel.mainMenuViewModel;
                 }
                 else 

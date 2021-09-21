@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -58,6 +59,7 @@ namespace WPFClient.MVVM.ViewModel
         {
             UserName = username;
             UserId = userId;
+            waitForNewFrames();
         }
         BitmapImage BitmapToImageSource(Bitmap bitmap)
         {
@@ -72,6 +74,14 @@ namespace WPFClient.MVVM.ViewModel
                 bitmapimage.EndInit();
                 return bitmapimage;
             }
+        }
+        private async Task waitForNewFrames()
+        {
+            var task = Task.Factory.StartNew(() =>
+            {
+
+            });
+            await task;
         }
     }
 }
