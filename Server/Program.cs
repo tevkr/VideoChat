@@ -57,7 +57,7 @@ namespace Server
         {
             IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse(_serverHost), _serverPort);
 
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);// Сокет на udp
+            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);// Сокет на tcp
             socket.Bind(ipEndPoint); // Связывает объект Socket с локальной конечной точкой.
             socket.Listen(1000); // Устанавливает объект Socket в состояние прослушивания. 1000 - Максимальная длина очереди ожидающих подключений.
             Console.WriteLine("Server has been started on IP: {0}.", ipEndPoint);

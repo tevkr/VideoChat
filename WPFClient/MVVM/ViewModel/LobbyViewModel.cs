@@ -80,37 +80,14 @@ namespace WPFClient.MVVM.ViewModel
             {
                 _switchWebCam = value;
                 if (_switchWebCam)
-                    videoSource.Start();
+                    ((WebCamBannerViewModel)_localWebCamView.DataContext).VideoSource.Start();
                 else
-                    videoSource.Stop();
+                    ((WebCamBannerViewModel)_localWebCamView.DataContext).VideoSource.SignalToStop();
                 OnPropertyChanged(nameof(LobbyUserStats));
             }
         }
 
-        private static UdpClient udpClient = new UdpClient();
-        private static IPEndPoint anotherClientEndPoint = new IPEndPoint(IPAddress.Parse(Server._serverHost), Server._serverPort);
-        public static VideoCaptureDevice videoSource;
-        private static void VideoSource_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
-        {
-            var bmp = new Bitmap(eventArgs.Frame, 250, 250);
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                ((WebCamBannerViewModel) _localWebCamView.DataContext).VideoFrameBitmap = bmp;
-            });
-            try
-            {
-                using (var ms = new MemoryStream())
-                {
-                    bmp.Save(ms, ImageFormat.Jpeg);
-                    var bytes = ms.ToArray();
-                    udpClient.Send(bytes, bytes.Length, anotherClientEndPoint);
-                }
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-            }
-        }
+        
         private FilterInfo _selectedFilterInfo;
         public FilterInfo SelectedFilterInfo
         {
@@ -118,8 +95,8 @@ namespace WPFClient.MVVM.ViewModel
             set
             {
                 _selectedFilterInfo = value;
-                videoSource = new VideoCaptureDevice(_selectedFilterInfo.MonikerString);
-                videoSource.NewFrame += VideoSource_NewFrame;
+                ((WebCamBannerViewModel)_localWebCamView.DataContext).VideoSource =
+                    new VideoCaptureDevice(_selectedFilterInfo.MonikerString);
                 OnPropertyChanged(nameof(SelectedFilterInfo));
             }
         }
@@ -140,10 +117,7 @@ namespace WPFClient.MVVM.ViewModel
             _webCamViews = new ObservableCollection<WebCamBannerView>();
             BackToMainMenuCommand = new AsyncRelayCommand(async (o) => await BackToMainMenuTask(o));
             VideoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-            if (VideoDevices.Count >= 1)
-                SelectedFilterInfo = VideoDevices[0];
             _currentUserLeaved = false;
-            SwitchWebCam = true;
             if (CurrentLobby != null)
             {
                 LobbyId = CurrentLobby.Id;
@@ -157,6 +131,9 @@ namespace WPFClient.MVVM.ViewModel
                     if (CurrentLobby.Users[i].Id == Application.Current.Properties["LocalUserId"].ToString())
                         _localWebCamView = WebCamViews.Last();
                 }
+                if (VideoDevices.Count >= 1)
+                    SelectedFilterInfo = VideoDevices[0];
+                SwitchWebCam = true;
                 waitForLobbyChanges();
             }
         }
@@ -167,7 +144,7 @@ namespace WPFClient.MVVM.ViewModel
         {
             var task = Task.Factory.StartNew(() =>
             {
-                videoSource.Stop();
+                ((WebCamBannerViewModel)_localWebCamView.DataContext).VideoSource.SignalToStop();
                 Server.SendTCP(ServerCommand.leaveLobbyCommand());
                 MainViewModel.CurrentView = MainViewModel.mainMenuViewModel;
                 _currentUserLeaved = true;

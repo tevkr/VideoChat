@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 
 namespace ServerDLL
 {
@@ -12,7 +13,8 @@ namespace ServerDLL
             CreateLobby,
             LeaveLobby,
             GetLobbies,
-            JoinLobby
+            JoinLobby,
+            NewFrame
         }
         private Commands _command;
         public Commands Command
@@ -59,6 +61,15 @@ namespace ServerDLL
         }
         // ---------------------------------
 
+        // Новый фрейм-------------------
+        private Bitmap _frame;
+        public Bitmap Frame
+        {
+            get { return _frame; }
+            set { _frame = value; }
+        }
+        // ---------------------------------
+
         // Создание команды сервера (для клиента)
         public static ServerCommand changeUserNameServerCommand(string newUserName)
         {
@@ -94,6 +105,14 @@ namespace ServerDLL
             result.Command = Commands.JoinLobby;
             result.LobbyId = lobbyId;
             result.LobbyPassword = lobbyPassword;
+            return result;
+        }
+
+        public static ServerCommand newFrameCommand(Bitmap newFrame)
+        {
+            ServerCommand result = new ServerCommand();
+            result.Command = Commands.NewFrame;
+            result.Frame = newFrame;
             return result;
         }
         // ---------------------------------

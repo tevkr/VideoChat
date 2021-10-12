@@ -1,6 +1,7 @@
 ﻿using ServerDLL;
 using System;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Newtonsoft.Json;
@@ -13,6 +14,7 @@ namespace Server
         private string _userName; // Имя пользователя
         private Socket _handler; // Сокет для прослушивания пользователя
         private Thread _userThread; // Поток для прослушивания
+        private Thread _userUPDThread; // Поток для прослушивания UPD
         private Lobby currentLobby;
         public User(Socket socket)
         {
@@ -23,6 +25,9 @@ namespace Server
             _userThread = new Thread(listner);
             _userThread.IsBackground = true;
             _userThread.Start();
+            _userUPDThread = new Thread(UDPlistener);
+            _userUPDThread.IsBackground = true;
+            _userUPDThread.Start();
         }
         public string Id
         {
@@ -52,23 +57,31 @@ namespace Server
                 }
             }
         }
-        private void UDPlistener()
+        private async void UDPlistener()
         {
+            //IPEndPoint asd = new IPEndPoint(IPAddress.Parse("192.168.1.214"), 9934);
+            UdpClient udpClient = new UdpClient(9934);
+            byte[] buffer = new byte[300000];
+            IPEndPoint remoteIpEndPoint = (IPEndPoint) _handler.RemoteEndPoint;
             while (true)
             {
                 try
                 {
-                    byte[] buffer = new byte[8000];
-                    int bytesRec = _handler.Receive(buffer);
-                    ServerCommandConverter serverCommandConverter = new ServerCommandConverter(buffer, bytesRec);
+                    var data = await udpClient.ReceiveAsync();
+                    ServerCommandConverter serverCommandConverter = new ServerCommandConverter(buffer, data.Buffer.Length);
                     ServerCommand serverCommand = serverCommandConverter.ServerCommand;
-                    handleCommand(serverCommand);
+                    if (serverCommand.Command == ServerCommand.Commands.NewFrame)
+                    {
+                        Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    }
                 }
                 catch
                 {
-                    currentLobbyRemove();
-                    Server.EndUser(this);
-                    return;
+                    Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                 }
             }
         }

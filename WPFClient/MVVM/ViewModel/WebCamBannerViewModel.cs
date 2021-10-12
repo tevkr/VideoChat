@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using AForge.Video.DirectShow;
+using ServerDLL;
 using WPFClient.Core;
 
 namespace WPFClient.MVVM.ViewModel
@@ -55,6 +60,28 @@ namespace WPFClient.MVVM.ViewModel
                 OnPropertyChanged(nameof(VideoFrame));
             }
         }
+        private VideoCaptureDevice _videoSource;
+        public VideoCaptureDevice VideoSource
+        {
+            get { return _videoSource; }
+            set
+            {
+                _videoSource = value;
+                _videoSource.NewFrame += VideoSource_NewFrame;
+                _videoSource.Start();
+                OnPropertyChanged(nameof(VideoSource));
+            }
+        }
+        private void VideoSource_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
+        {
+            var bmp = new Bitmap(eventArgs.Frame, 250, 250);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                VideoFrameBitmap = bmp;
+            });
+            Server.SendUDP(ServerCommand.newFrameCommand(bmp));
+        }
+
         public WebCamBannerViewModel(string username, string userId)
         {
             UserName = username;
