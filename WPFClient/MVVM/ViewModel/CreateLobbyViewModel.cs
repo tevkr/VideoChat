@@ -71,6 +71,7 @@ namespace WPFClient.MVVM.ViewModel
                 if (serverResponse.Response == ServerDLL.ServerResponse.Responses.LobbyInfo)
                 {
                     ServerDLL.ServerResponse.Lobby lobby = serverResponse.lobby;
+                    Server.SetUDPPort(lobby.UDPPort);
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         MainViewModel.setLobbyView(lobby);

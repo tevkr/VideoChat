@@ -16,7 +16,8 @@ namespace ServerDLL
             LobbyInfo,
             Lobbies,
             UserJoined,
-            UserLeaved
+            UserLeaved,
+            NewFrame
         }
         private Responses _response;
         public Responses Response
@@ -90,6 +91,24 @@ namespace ServerDLL
             result.user = JsonConvert.DeserializeObject<User>(jsonUser);
             return result;
         }
+        public static ServerResponse NewFrameResponse(Frame newFrame) // NewFrame
+        {
+            ServerResponse result = new ServerResponse();
+            result.Response = Responses.NewFrame;
+            result.frame = new Frame
+            {
+                UserId = newFrame.UserId,
+                FrameBytes = newFrame.FrameBytes
+            };
+            return result;
+        }
+
+        private int _videoUPDPort;
+        public int VideoUPDPort
+        {
+            get { return _videoUPDPort; }
+            set { _videoUPDPort = value; }
+        }
         private List<Lobby> _lobbies;
         public List<Lobby> lobbies
         {
@@ -102,6 +121,12 @@ namespace ServerDLL
             get { return _lobby; }
             set { _lobby = value; }
         }
+        private Frame _frame;
+        public Frame frame
+        {
+            get { return _frame; }
+            set { _frame = value; }
+        }
         [Serializable]
         public class User
         {
@@ -112,11 +137,18 @@ namespace ServerDLL
         public class Lobby
         {
             public List<User> Users { get; set; }
+            public int UDPPort { get; set; }
             public string Id { get; set; }
             public string Name { get; set; }
             public int Capacity { get; set; }
             public string Password { get; set; }
             public int UsersCount { get; set; }
+        }
+        [Serializable]
+        public class Frame
+        {
+            public string UserId { get; set; }
+            public byte[] FrameBytes { get; set; }
         }
     }
 }

@@ -33,7 +33,7 @@ namespace WPFClient.MVVM.ViewModel
                 if (response == ServerDLL.ServerResponse.Responses.NameChanged)
                 {
                     Application.Current.Properties["LocalUserId"] = serverCommandConverter.ServerResponse.user.Id;
-                    MessageBox.Show(Application.Current.Properties["LocalUserId"].ToString());
+                    //MessageBox.Show(Application.Current.Properties["LocalUserId"].ToString());
                     MainViewModel.CurrentView = MainViewModel.mainMenuViewModel;
                 }
                 else 

@@ -15,6 +15,14 @@ namespace Server
         static void Main(string[] args)
         {
             _serverHost = ConfigurationManager.AppSettings.Get("ServerHost"); // localhost
+            
+            foreach (var ip in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    _serverHost = ip.ToString();
+            }
+
+            _serverHost = "192.168.1.214";
             _serverPort = int.Parse(ConfigurationManager.AppSettings.Get("ServerPort")); // 9933
 
             _serverThread = new Thread(startServer);

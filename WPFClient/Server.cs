@@ -2,6 +2,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Windows;
 
 namespace WPFClient
@@ -10,12 +11,26 @@ namespace WPFClient
     {
         public const string _serverHost = "192.168.1.214";
         public const int _serverPort = 9933;
-        public const int _serverPortUDP = 9934;
+        private static int _serverPortUDP = -1;
         private static UdpClient udpClient = new UdpClient();
         private static IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse(_serverHost), _serverPort);
-        private static IPEndPoint ipEndPointUDP = new IPEndPoint(IPAddress.Parse(_serverHost), _serverPortUDP);
+        private static IPEndPoint ipEndPointUDP = null;
         private static Socket _serverSocket;
         public static Socket ServerSocket { get { return _serverSocket; } }
+        public static void SetUDPPort(int port)
+        {
+            _serverPortUDP = port;
+            ipEndPointUDP = new IPEndPoint(IPAddress.Parse(_serverHost), _serverPortUDP);
+        }
+        public static int GetUDPPort()
+        {
+            return _serverPortUDP;
+        }
+        public static void ClearUDPPort()
+        {
+            _serverPortUDP = -1;
+            ipEndPointUDP = null;
+        }
         public static void ConnectTCP()
         {
             try
@@ -48,6 +63,8 @@ namespace WPFClient
         }
         public static void SendUDP(ServerCommand serverCommand)
         {
+            if (_serverPortUDP == -1)
+                return;
             byte[] bytes = ServerDLL.Serializer.Serialize(serverCommand);
             try
             {

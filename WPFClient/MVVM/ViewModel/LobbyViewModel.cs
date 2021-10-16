@@ -15,6 +15,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Xml.Serialization;
 using AForge.Video.DirectShow;
 using ServerDLL;
 using WPFClient.Core;
@@ -24,6 +25,7 @@ namespace WPFClient.MVVM.ViewModel
 {
     class LobbyViewModel : ObservableObject
     {
+        private UdpClient client;
         public static AsyncRelayCommand BackToMainMenuCommand { get; set; }
 
         static public event EventHandler WebCamViewsChanged;
@@ -135,6 +137,9 @@ namespace WPFClient.MVVM.ViewModel
                     SelectedFilterInfo = VideoDevices[0];
                 SwitchWebCam = true;
                 waitForLobbyChanges();
+                Thread th = new Thread(waitForNewFrames);
+                th.IsBackground = true;
+                th.Start();
             }
         }
 
@@ -144,8 +149,21 @@ namespace WPFClient.MVVM.ViewModel
         {
             var task = Task.Factory.StartNew(() =>
             {
-                ((WebCamBannerViewModel)_localWebCamView.DataContext).VideoSource.SignalToStop();
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    ((WebCamBannerViewModel)_localWebCamView.DataContext).VideoSource.SignalToStop();
+                    
+                });
+                for (int i = 0; i < WebCamViews.Count; i++)
+                {
+                    try
+                    {
+                        ((WebCamBannerViewModel)WebCamViews[i].DataContext).closeUdpClient();
+                    }
+                    catch { }
+                }
                 Server.SendTCP(ServerCommand.leaveLobbyCommand());
+                Server.ClearUDPPort();
                 MainViewModel.CurrentView = MainViewModel.mainMenuViewModel;
                 _currentUserLeaved = true;
             });
@@ -190,6 +208,44 @@ namespace WPFClient.MVVM.ViewModel
                 }
             });
             await task;
+        }
+        private async void waitForNewFrames()
+        {
+            client = new UdpClient(Server.GetUDPPort());
+            byte[] buffer = new byte[15000];
+            IPEndPoint remoteIpEndPoint = null;
+            while (true)
+            {
+                try
+                {
+                    buffer = client.Receive(ref remoteIpEndPoint);
+                    ServerResponseConverter serverResponseConverter =
+                        new ServerResponseConverter(buffer, buffer.Length);
+                    ServerResponse serverResponse = serverResponseConverter.ServerResponse;
+                    if (serverResponse.Response == ServerDLL.ServerResponse.Responses.NewFrame)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            foreach (var webCamView in WebCamViews)
+                            {
+                                if (((WebCamBannerViewModel)webCamView.DataContext).UserId == serverResponse.frame.UserId)
+                                {
+                                    using (var ms = new System.IO.MemoryStream(serverResponse.frame.FrameBytes))
+                                    {
+                                        var bmp = new Bitmap(ms);
+                                        ((WebCamBannerViewModel)webCamView.DataContext).VideoFrameBitmap = bmp;
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+                catch (Exception e)
+                {
+                    string asd = e.ToString();
+                    string a = asd;
+                }
+            }
         }
     }
 }

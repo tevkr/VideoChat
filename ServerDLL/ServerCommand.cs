@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 
 namespace ServerDLL
 {
@@ -62,11 +64,24 @@ namespace ServerDLL
         // ---------------------------------
 
         // Новый фрейм-------------------
+        private string _userId;
+
+        public string UserId
+        {
+            get { return _userId; }
+            set { _userId = value; }
+        }
         private Bitmap _frame;
         public Bitmap Frame
         {
             get { return _frame; }
             set { _frame = value; }
+        }
+        private byte[] _frameBytes;
+        public byte[] FrameBytes
+        {
+            get { return _frameBytes; }
+            set { _frameBytes = value; }
         }
         // ---------------------------------
 
@@ -108,11 +123,23 @@ namespace ServerDLL
             return result;
         }
 
-        public static ServerCommand newFrameCommand(Bitmap newFrame)
+        public static ServerCommand newFrameCommand(Bitmap newFrame, string userId)
         {
             ServerCommand result = new ServerCommand();
             result.Command = Commands.NewFrame;
-            result.Frame = newFrame;
+            result.UserId = userId;
+            //result.Frame = newFrame;
+            try
+            {
+                using (var ms = new MemoryStream())
+                {
+                    newFrame.Save(ms, ImageFormat.Jpeg);
+                    result.FrameBytes = ms.ToArray();
+                }
+            }
+            catch (Exception e)
+            {
+            }
             return result;
         }
         // ---------------------------------

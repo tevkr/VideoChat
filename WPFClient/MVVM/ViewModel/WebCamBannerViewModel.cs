@@ -19,6 +19,12 @@ namespace WPFClient.MVVM.ViewModel
 {
     class WebCamBannerViewModel : ObservableObject
     {
+        private UdpClient client;
+
+        public void closeUdpClient()
+        {
+            client.Close();
+        }
         private string _userName;
         public string UserName
         {
@@ -79,14 +85,13 @@ namespace WPFClient.MVVM.ViewModel
             {
                 VideoFrameBitmap = bmp;
             });
-            Server.SendUDP(ServerCommand.newFrameCommand(bmp));
+            Server.SendUDP(ServerCommand.newFrameCommand(bmp, Application.Current.Properties["LocalUserId"].ToString()));
         }
 
         public WebCamBannerViewModel(string username, string userId)
         {
             UserName = username;
             UserId = userId;
-            waitForNewFrames();
         }
         BitmapImage BitmapToImageSource(Bitmap bitmap)
         {
@@ -101,14 +106,6 @@ namespace WPFClient.MVVM.ViewModel
                 bitmapimage.EndInit();
                 return bitmapimage;
             }
-        }
-        private async Task waitForNewFrames()
-        {
-            var task = Task.Factory.StartNew(() =>
-            {
-
-            });
-            await task;
         }
     }
 }

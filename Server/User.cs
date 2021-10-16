@@ -14,7 +14,6 @@ namespace Server
         private string _userName; // Имя пользователя
         private Socket _handler; // Сокет для прослушивания пользователя
         private Thread _userThread; // Поток для прослушивания
-        private Thread _userUPDThread; // Поток для прослушивания UPD
         private Lobby currentLobby;
         public User(Socket socket)
         {
@@ -25,9 +24,11 @@ namespace Server
             _userThread = new Thread(listner);
             _userThread.IsBackground = true;
             _userThread.Start();
-            _userUPDThread = new Thread(UDPlistener);
-            _userUPDThread.IsBackground = true;
-            _userUPDThread.Start();
+        }
+
+        public Socket getHandler()
+        {
+            return _handler;
         }
         public string Id
         {
@@ -57,34 +58,7 @@ namespace Server
                 }
             }
         }
-        private async void UDPlistener()
-        {
-            //IPEndPoint asd = new IPEndPoint(IPAddress.Parse("192.168.1.214"), 9934);
-            UdpClient udpClient = new UdpClient(9934);
-            byte[] buffer = new byte[300000];
-            IPEndPoint remoteIpEndPoint = (IPEndPoint) _handler.RemoteEndPoint;
-            while (true)
-            {
-                try
-                {
-                    var data = await udpClient.ReceiveAsync();
-                    ServerCommandConverter serverCommandConverter = new ServerCommandConverter(buffer, data.Buffer.Length);
-                    ServerCommand serverCommand = serverCommandConverter.ServerCommand;
-                    if (serverCommand.Command == ServerCommand.Commands.NewFrame)
-                    {
-                        Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                    }
-                    else
-                    {
-                        Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                    }
-                }
-                catch
-                {
-                    Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                }
-            }
-        }
+       
         public void End()
         {
             try
@@ -120,6 +94,11 @@ namespace Server
                 }
                 currentLobby = Server.NewLobby(serverCommand.LobbyName, serverCommand.LobbyCapacity, 
                     serverCommand.LobbyPassword, this);
+                if (currentLobby == null)
+                {
+                    SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
+                    return;
+                }
                 SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(currentLobby)));
                 return;
             }
@@ -162,7 +141,6 @@ namespace Server
                 {
                     SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
                 }
-                return;
             }
         }
         public void SendResponseToUser(ServerDLL.ServerResponse.Responses response) // Success or Error
