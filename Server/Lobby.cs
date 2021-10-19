@@ -10,88 +10,92 @@ namespace Server
 {
     public class Lobby
     {
-        public List<User> Users;
-        private int _UDPPort;
+        private List<User> _users;
+
+        public List<User> users
+        {
+            get { return _users; }
+        }
+        private int _udpPort;
+        public int udpPort
+        {
+            get { return _udpPort; }
+        }
         private string _id;
-        private string _name;
-        private int _capacity;
-        private string _password;
-
-        private Thread _userUPDThread; // Поток для прослушивания UPD
-        private UdpClient _udpClient;
-        private UdpClient udpClientToSend;
-        public int UDPPort
-        {
-            get { return _UDPPort; }
-        }
-
-        public UdpClient getUdpClient()
-        {
-            return _udpClient;
-        }
-        public string Id
+        public string id
         {
             get { return _id; }
         }
-        public string Name
+        private string _name;
+        public string name
         {
             get { return _name; }
         }
-        public int Capacity
+        private int _capacity;
+        public int capacity
         {
             get { return _capacity; }
         }
-        public string Password
+        private string _password;
+        public string password
         {
             get { return _password; }
         }
-        public int UsersCount
+
+        private Thread _userUPDThread; // Поток для прослушивания UPD
+        private UdpClient _udpClientListener;
+        public UdpClient udpClientListener
         {
-            get { return Users.Count; }
+            get
+            {
+                return _udpClientListener;
+            }
         }
+        private UdpClient _udpClientSender;
+        
         public Lobby(string name, int capacity, string password, User owner, int UDPPort)
         {
-            _UDPPort = UDPPort;
-            Users = new List<User>();
-            Users.Add(owner);
+            _udpPort = UDPPort;
+            _users = new List<User>();
+            _users.Add(owner);
             Guid myuuid = Guid.NewGuid();
             _id = myuuid.ToString();
             _name = name;
             _capacity = capacity;
             _password = password;
 
-            _userUPDThread = new Thread(UDPlistener);
+            _userUPDThread = new Thread(udpListener);
             _userUPDThread.IsBackground = true;
             _userUPDThread.Start();
         }
         public void removeUser(User user)
         {
-            foreach (var u in Users) // Оповещение пользователей об отключении
+            foreach (var u in _users) // Оповещение пользователей об отключении
             {
                 u.SendResponseToUser(ServerResponse.UserLeavedResponse(JsonConvert.SerializeObject(user)));
             }
-            Users.RemoveAll(u => u.Id == user.Id);
-            if (Users.Count == 0)
-                Server.EndLobby(this);
+            _users.RemoveAll(u => u.id == user.id);
+            if (_users.Count == 0)
+                Server.endLobby(this);
         }
         public void addUser(User user)
         {
-            foreach (var u in Users) // Оповещение пользователей о новом подключении
+            foreach (var u in _users) // Оповещение пользователей о новом подключении
             {
                 u.SendResponseToUser(ServerResponse.UserJoinedResponse(JsonConvert.SerializeObject(user)));
             }
-            Users.Add(user);
+            _users.Add(user);
         }
-        private async void UDPlistener()
+        private async void udpListener()
         {
-            _udpClient = new UdpClient(this.UDPPort);
+            _udpClientListener = new UdpClient(this.udpPort);
             byte[] buffer = new byte[15000];
             IPEndPoint remoteIpEndPoint = null;
             while (true)
             {
                 try
                 {
-                    buffer = _udpClient.Receive(ref remoteIpEndPoint);
+                    buffer = _udpClientListener.Receive(ref remoteIpEndPoint);
                     ServerCommandConverter serverCommandConverter = new ServerCommandConverter(buffer, buffer.Length);
                     ServerCommand serverCommand = serverCommandConverter.ServerCommand;
                     handleCommand(serverCommand);
@@ -103,25 +107,25 @@ namespace Server
         {
             if (serverCommand.Command == ServerCommand.Commands.NewFrame)
             {
-                SendFrameToLobbyUsers(serverCommand.FrameBytes, serverCommand.UserId);
+                sendFrameToLobbyUsers(serverCommand.FrameBytes, serverCommand.UserId);
             }
         }
-        public void SendFrameToLobbyUsers(byte[] frameBytes, string userId)
+        public void sendFrameToLobbyUsers(byte[] frameBytes, string userId)
         {
             try
             {
-                udpClientToSend = new UdpClient();
-                foreach (var user in this.Users)
+                _udpClientSender = new UdpClient();
+                foreach (var user in this._users)
                 {
-                    if (user.Id != userId)
+                    if (user.id != userId)
                     {
                         ServerResponse.Frame frame = new ServerResponse.Frame();
                         frame.UserId = userId;
                         frame.FrameBytes = frameBytes;
                         var bytes = ServerDLL.Serializer.Serialize(ServerResponse.NewFrameResponse(frame));
-                        var remoteIpEndPoint = (IPEndPoint)user.getHandler().RemoteEndPoint;
-                        remoteIpEndPoint.Port = this.UDPPort;
-                        udpClientToSend.SendAsync(bytes, bytes.Length, remoteIpEndPoint);
+                        var remoteIpEndPoint = (IPEndPoint)user.handler.RemoteEndPoint;
+                        remoteIpEndPoint.Port = this.udpPort;
+                        _udpClientSender.SendAsync(bytes, bytes.Length, remoteIpEndPoint);
                     }
                 }
             }

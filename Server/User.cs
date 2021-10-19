@@ -10,35 +10,35 @@ namespace Server
 {
     public class User
     {
-        private string _id;
-        private string _userName; // Имя пользователя
-        private Socket _handler; // Сокет для прослушивания пользователя
-        private Thread _userThread; // Поток для прослушивания
-        private Lobby currentLobby;
-        public User(Socket socket)
-        {
-            currentLobby = null;
-            Guid myuuid = Guid.NewGuid();
-            _id = myuuid.ToString();
-            _handler = socket;
-            _userThread = new Thread(listner);
-            _userThread.IsBackground = true;
-            _userThread.Start();
-        }
-
-        public Socket getHandler()
-        {
-            return _handler;
-        }
-        public string Id
+        private string _id; // Идентификатор пользователя
+        public string id
         {
             get { return _id; }
         }
-        public string UserName
+        private string _userName; // Имя пользователя
+        public string userName
         {
             get { return _userName; }
         }
-        private void listner()
+        private Socket _handler; // Сокет для прослушивания пользователя
+        [JsonIgnore]
+        public Socket handler
+        {
+            get { return _handler; }
+        }
+        private Thread _userThread; // Поток для прослушивания
+        private Lobby _currentLobby; // Лобби, в котором находится пользователь
+        public User(Socket socket)
+        {
+            _currentLobby = null;
+            _id = Guid.NewGuid().ToString();
+            _handler = socket;
+            _userThread = new Thread(tcpListener);
+            _userThread.IsBackground = true;
+            _userThread.Start();
+        }
+        
+        private void tcpListener()
         {
             while (true)
             {
@@ -53,22 +53,18 @@ namespace Server
                 catch
                 {
                     currentLobbyRemove();
-                    Server.EndUser(this); 
+                    Server.endUser(this); 
                     return; 
                 }
             }
         }
        
-        public void End()
+        public void end()
         {
             try
             {
                 _handler.Close();
-                try
-                {
-                    _userThread.Abort();
-                }
-                catch { }
+                _userThread.Abort();
             }
             catch (Exception e) { Console.WriteLine("Error with end: {0}.", e.Message); }
         }
@@ -92,14 +88,14 @@ namespace Server
                     SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
                     return;
                 }
-                currentLobby = Server.NewLobby(serverCommand.LobbyName, serverCommand.LobbyCapacity, 
+                _currentLobby = Server.newLobby(serverCommand.LobbyName, serverCommand.LobbyCapacity, 
                     serverCommand.LobbyPassword, this);
-                if (currentLobby == null)
+                if (_currentLobby == null)
                 {
                     SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
                     return;
                 }
-                SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(currentLobby)));
+                SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(_currentLobby)));
                 return;
             }
             if (serverCommand.Command == ServerCommand.Commands.LeaveLobby)
@@ -114,16 +110,16 @@ namespace Server
             }
             if (serverCommand.Command == ServerCommand.Commands.JoinLobby)
             {
-                Lobby temp = Server.lobbies.Find(l => serverCommand.LobbyId == l.Id);
-                if (temp != null && temp.UsersCount != temp.Capacity)
+                Lobby temp = Server.lobbies.Find(l => serverCommand.LobbyId == l.id);
+                if (temp != null && temp.users.Count != temp.capacity)
                 {
-                    if (!String.IsNullOrEmpty(temp.Password))
+                    if (!String.IsNullOrEmpty(temp.password))
                     {
-                        if (serverCommand.LobbyPassword == temp.Password)
+                        if (serverCommand.LobbyPassword == temp.password)
                         {
-                            currentLobby = temp;
-                            currentLobby.addUser(this);
-                            SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(currentLobby)));
+                            _currentLobby = temp;
+                            _currentLobby.addUser(this);
+                            SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(_currentLobby)));
                         }
                         else
                         {
@@ -132,9 +128,9 @@ namespace Server
                     }
                     else
                     {
-                        currentLobby = temp;
-                        currentLobby.addUser(this);
-                        SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(currentLobby)));
+                        _currentLobby = temp;
+                        _currentLobby.addUser(this);
+                        SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(_currentLobby)));
                     }
                 }
                 else
@@ -154,7 +150,7 @@ namespace Server
             {
                 Console.WriteLine("Error with send command: {0}.", e.Message);
                 currentLobbyRemove();
-                Server.EndUser(this);
+                Server.endUser(this);
             }
         }
         public void SendResponseToUser(ServerDLL.ServerResponse response) // CreateLobby
@@ -168,14 +164,14 @@ namespace Server
             {
                 Console.WriteLine("Error with send command: {0}.", e.Message);
                 currentLobbyRemove();
-                Server.EndUser(this);
+                Server.endUser(this);
             }
         }
 
         private void currentLobbyRemove()
         {
-            Lobby temp = currentLobby;
-            currentLobby = null;
+            Lobby temp = _currentLobby;
+            _currentLobby = null;
             if (temp != null)
                 temp.removeUser(this);
         }

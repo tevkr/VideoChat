@@ -7,41 +7,36 @@ namespace Server
 {
     public static class Server
     {
-        public static SortedDictionary<int, bool> availableUDPPorts = new SortedDictionary<int, bool>();
-        public static List<User>Users = new List<User>();
-        public static List<Lobby>lobbies = new List<Lobby>();
+        private static SortedDictionary<int, bool> _availableUDPPorts; // Доступные UDP порты
+        private static List<User> _users; // Список подключенных пользователей
+        public static List<User> users
+        {
+            get
+            {
+                return _users;
+            }
+        }
+        private static List<Lobby> _lobbies; // Список созданных лобби
+        public static List<Lobby> lobbies
+        {
+            get
+            {
+                return _lobbies;
+            }
+        }
+
         static Server()
         {
-            for (int i = 0, port = 9934; i < 100; i++, port++)
-                availableUDPPorts.Add(port, true);
-        }
-        public static void NewUser(Socket handle)
-        {
-            try
-            {
-                User newUser = new User(handle);
-                Users.Add(newUser);
-                Console.WriteLine("New user connected: {0}", handle.RemoteEndPoint);
-            }
-            catch (Exception e) { Console.WriteLine("Error with addNewUser: {0}.", e.Message); }
-        }
-        public static void EndUser(User user)
-        {
-            try
-            {
-                if (Users.Contains(user))
-                {
-                    user.End();
-                    Users.Remove(user);
-                    Console.WriteLine("User {0} has been disconnected.", user.UserName);
-                }
-            }
-            catch (Exception e) { Console.WriteLine("Error with endClient: {0}.", e.Message); }
+            _availableUDPPorts = new SortedDictionary<int, bool>();
+            _users = new List<User>();
+            _lobbies = new List<Lobby>();
+            for (int i = 0, port = 9934; i < 100; i++, port++) // Заполнение availableUDPPorts портами [9934; 10034]
+                _availableUDPPorts.Add(port, true);
         }
 
         private static int findAvailablePort()
         {
-            foreach (var availableUDPPortsElement in availableUDPPorts)
+            foreach (var availableUDPPortsElement in _availableUDPPorts)
             {
                 if (availableUDPPortsElement.Value == true)
                     return availableUDPPortsElement.Key;
@@ -50,35 +45,53 @@ namespace Server
         }
         private static void setUDPPortAvailability(int port, bool availability)
         {
-            availableUDPPorts[port] = availability;
+            _availableUDPPorts[port] = availability;
         }
 
-        public static Lobby NewLobby(string lobbyName, int lobbyCapacity, string lobbyPassowrd, User owner)
+        public static void newUser(Socket handler)
         {
-            if (lobbies.Count <= 100)
+            try
             {
-                var availablePort = findAvailablePort();
-                if (availablePort != -1)
-                {
-                    Lobby lobby = new Lobby(lobbyName, lobbyCapacity, lobbyPassowrd, owner, availablePort);
-                    lobbies.Add(lobby);
-                    setUDPPortAvailability(availablePort, false);
-                    Console.WriteLine($"New lobby [{lobbies.Last().Id}]:{lobbies.Last().Name} was created.");
-                    return lobby;
-                }
+                User newUser = new User(handler);
+                _users.Add(newUser);
+                Console.WriteLine("New user connected: {0}", handler.RemoteEndPoint);
             }
-            return null;
+            catch (Exception e) { Console.WriteLine("Error with addNewUser: {0}.", e.Message); }
         }
-        public static void EndLobby(Lobby lobby)
+        public static void endUser(User user)
         {
-            var lobbyToRemove = lobbies.Find(l => l.Id == lobby.Id);
-            if (lobbyToRemove != null)
+            try
             {
-                Console.WriteLine($"Lobby [{lobbyToRemove.Id}]:{lobbyToRemove.Name} was deleted.");
-                setUDPPortAvailability(lobbyToRemove.UDPPort, true);
-                lobbyToRemove.getUdpClient().Close();
-                lobbies.RemoveAll(l => l.Id == lobby.Id);
+                if (!_users.Contains(user)) return;
+                user.end();
+                _users.Remove(user);
+                Console.WriteLine("User {0} has been disconnected.", user.userName);
             }
+            catch (Exception e) { Console.WriteLine("Error with endClient: {0}.", e.Message); }
+        }
+
+        public static Lobby newLobby(string lobbyName, int lobbyCapacity, string lobbyPassword, User owner)
+        {
+            if (lobbies.Count >= 100) return null;
+
+            var availablePort = findAvailablePort();
+            if (availablePort == -1) return null;
+
+            Lobby lobby = new Lobby(lobbyName, lobbyCapacity, lobbyPassword, owner, availablePort);
+            lobbies.Add(lobby);
+            setUDPPortAvailability(availablePort, false);
+            Console.WriteLine($"New lobby [{lobbies.Last().id}]:{lobbies.Last().name} was created.");
+            return lobby;
+        }
+        public static void endLobby(Lobby lobby)
+        {
+            var lobbyToRemove = lobbies.Find(l => l.id == lobby.id);
+            if (lobbyToRemove == null) return;
+
+            Console.WriteLine($"Lobby [{lobbyToRemove.id}]:{lobbyToRemove.name} was deleted.");
+            setUDPPortAvailability(lobbyToRemove.udpPort, true);
+            lobbyToRemove.udpClientListener.Close();
+            lobbies.RemoveAll(l => l.id == lobby.id);
         }
     }
 }
