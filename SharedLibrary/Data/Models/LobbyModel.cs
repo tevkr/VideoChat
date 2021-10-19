@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace SharedLibrary.Data.Models
 {
     [Serializable]
-    class LobbyModel
+    public class LobbyModel
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string Password { get; set; }
-        public int Capacity { get; set; }
-        public List<UserModel> Users { get; set; }
-        public int UDPPort { get; set; }
+        public string id { get; set; }
+        public string name { get; set; }
+        public string password { get; set; }
+        public int capacity { get; set; }
+        public List<UserModel> users { get; set; }
+        public int udpPort { get; set; }
     }
 }

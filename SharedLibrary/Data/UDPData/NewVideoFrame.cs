@@ -1,33 +1,37 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Text;
-using Newtonsoft.Json;
 using SharedLibrary.Data.Models;
 
 namespace SharedLibrary.Data.UDPData
 {
-    class NewVideoFrame
+    [Serializable]
+    public class NewVideoFrame
     {
-        public VideoFrameModel VideoFrame { get; private set; }
+        public VideoFrameModel videoFrame { get; private set; }
         public NewVideoFrame(Bitmap newFrame, string userId)
         {
-            VideoFrame = new VideoFrameModel();
-            VideoFrame.UserId = userId;
+            videoFrame = new VideoFrameModel();
+            videoFrame.userId = userId;
             try
             {
                 using (var ms = new MemoryStream())
                 {
                     newFrame.Save(ms, ImageFormat.Jpeg);
-                    VideoFrame.FrameBytes = ms.ToArray();
+                    videoFrame.frameBytes = ms.ToArray();
                 }
             }
             catch
             {
-                VideoFrame.FrameBytes = null;
+                videoFrame.frameBytes = null;
             }
+        }
+        public NewVideoFrame(byte[] newFrame, string userId)
+        {
+            videoFrame = new VideoFrameModel();
+            videoFrame.userId = userId;
+            videoFrame.frameBytes = newFrame;
         }
     }
 }

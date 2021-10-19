@@ -1,19 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using SharedLibrary.Data.Models;
 
 namespace SharedLibrary.Data.Requests
 {
-    class CreateLobby
+    [Serializable]
+    public class CreateLobby
     {
-        public LobbyModel Lobby { get; private set; }
+        public LobbyModel lobby { get; }
         public CreateLobby(string lobbyName, int lobbyCapacity, string lobbyPassword)
         {
-            Lobby = new LobbyModel();
-            Lobby.Name = lobbyName;
-            Lobby.Capacity = lobbyCapacity;
-            Lobby.Password = lobbyPassword;
+            lobby = new LobbyModel();
+            lobby.name = lobbyName;
+            lobby.capacity = lobbyCapacity;
+            lobby.password = lobbyPassword;
         }
     }
 }

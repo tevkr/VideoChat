@@ -1,133 +1,138 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Text;
-using SharedLibrary.Data.Models;
 using SharedLibrary.Data.Requests;
 using SharedLibrary.Data.Responses;
 using SharedLibrary.Data.UDPData;
 
 namespace SharedLibrary.Data
 {
-    class DataObject
+   [Serializable]
+    public class DataObject
     {
         private DataObject() { }
         public enum DataObjectTypes
         {
             // Requests
-            ChangeUserNameRequest,
-            CreateLobbyRequest,
-            JoinLobbyRequest,
-            LeaveLobbyRequest,
-            GetLobbiesRequest,
+            changeUserNameRequest,
+            createLobbyRequest,
+            joinLobbyRequest,
+            leaveLobbyRequest,
+            getLobbiesRequest,
             // Responses
-            SuccessResponse,
-            ErrorResponse,
-            NameChangedResponse,
-            LobbyInfoResponse,
-            LobbiesInfoResponse,
-            UserJoinedToLobbyResponse,
-            UserLeavedFromLobbyResponse,
+            successResponse,
+            errorResponse,
+            nameChangedResponse,
+            lobbyInfoResponse,
+            lobbiesInfoResponse,
+            userJoinedToLobbyResponse,
+            userLeavedFromLobbyResponse,
             // UDP Data
-            NewVideoFrame
+            newVideoFrame
         }
-        public DataObjectTypes DataObjectType { get; private set; }
-        public object DataObjectInfo { get; private set; }
+        public DataObjectTypes dataObjectType { get; private set; }
+        public object dataObjectInfo { get; private set; }
 
         // Requests
-        public static DataObject ChangeUserNameRequest(string userName)
+        public static DataObject changeUserNameRequest(string userName)
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.ChangeUserNameRequest;
-            result.DataObjectInfo = new ChangeUserName(userName);
+            result.dataObjectType = DataObjectTypes.changeUserNameRequest;
+            result.dataObjectInfo = new ChangeUserName(userName);
             return result;
         }
-        public static DataObject CreateLobbyRequest(string lobbyName, int lobbyCapacity, string lobbyPassword)
+        public static DataObject createLobbyRequest(string lobbyName, int lobbyCapacity, string lobbyPassword)
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.CreateLobbyRequest;
-            result.DataObjectInfo = new CreateLobby(lobbyName, lobbyCapacity, lobbyPassword);
+            result.dataObjectType = DataObjectTypes.createLobbyRequest;
+            result.dataObjectInfo = new CreateLobby(lobbyName, lobbyCapacity, lobbyPassword);
             return result;
         }
-        public static DataObject JoinLobbyRequest(string lobbyId, string lobbyPassword)
+        public static DataObject joinLobbyRequest(string lobbyId, string lobbyPassword)
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.JoinLobbyRequest;
-            result.DataObjectInfo = new JoinLobby(lobbyId, lobbyPassword);
+            result.dataObjectType = DataObjectTypes.joinLobbyRequest;
+            result.dataObjectInfo = new JoinLobby(lobbyId, lobbyPassword);
             return result;
         }
-        public static DataObject LeaveLobbyRequest()
+        public static DataObject leaveLobbyRequest()
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.LeaveLobbyRequest;
-            result.DataObjectInfo = null;
+            result.dataObjectType = DataObjectTypes.leaveLobbyRequest;
+            result.dataObjectInfo = null;
             return result;
         }
-        public static DataObject GetLobbiesRequest()
+        public static DataObject getLobbiesRequest()
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.GetLobbiesRequest;
-            result.DataObjectInfo = null;
+            result.dataObjectType = DataObjectTypes.getLobbiesRequest;
+            result.dataObjectInfo = null;
             return result;
         }
 
         // Responses
-        public static DataObject SuccessResponse()
+        public static DataObject successResponse()
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.SuccessResponse;
-            result.DataObjectInfo = null;
+            result.dataObjectType = DataObjectTypes.successResponse;
+            result.dataObjectInfo = null;
             return result;
         }
-        public static DataObject ErrorResponse()
+        public static DataObject errorResponse()
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.ErrorResponse;
-            result.DataObjectInfo = null;
+            result.dataObjectType = DataObjectTypes.errorResponse;
+            result.dataObjectInfo = null;
             return result;
         }
-        public static DataObject NameChangedResponse(string userJson)
+        public static DataObject nameChangedResponse(string userJson)
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.NameChangedResponse;
-            result.DataObjectInfo = new NameChanged(userJson);
+            result.dataObjectType = DataObjectTypes.nameChangedResponse;
+            result.dataObjectInfo = new NameChanged(userJson);
             return result;
         }
-        public static DataObject LobbyInfoResponse(string lobbyJson)
+        public static DataObject lobbyInfoResponse(string lobbyJson)
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.LobbyInfoResponse;
-            result.DataObjectInfo = new LobbyInfo(lobbyJson);
+            result.dataObjectType = DataObjectTypes.lobbyInfoResponse;
+            result.dataObjectInfo = new LobbyInfo(lobbyJson);
             return result;
         }
-        public static DataObject LobbiesInfoResponse(string lobbiesJson)
+        public static DataObject lobbiesInfoResponse(string lobbiesJson)
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.LobbiesInfoResponse;
-            result.DataObjectInfo = new LobbiesInfo(lobbiesJson);
+            result.dataObjectType = DataObjectTypes.lobbiesInfoResponse;
+            result.dataObjectInfo = new LobbiesInfo(lobbiesJson);
             return result;
         }
-        public static DataObject UserJoinedToLobbyResponse(string userJson)
+        public static DataObject userJoinedToLobbyResponse(string userJson)
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.UserJoinedToLobbyResponse;
-            result.DataObjectInfo = new UserJoinedToLobby(userJson);
+            result.dataObjectType = DataObjectTypes.userJoinedToLobbyResponse;
+            result.dataObjectInfo = new UserJoinedToLobby(userJson);
             return result;
         }
-        public static DataObject UserLeavedFromLobbyResponse(string userJson)
+        public static DataObject userLeavedFromLobbyResponse(string userJson)
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.UserLeavedFromLobbyResponse;
-            result.DataObjectInfo = new UserLeavedFromLobby(userJson);
+            result.dataObjectType = DataObjectTypes.userLeavedFromLobbyResponse;
+            result.dataObjectInfo = new UserLeavedFromLobby(userJson);
             return result;
         }
 
         // UDP Data
-        public static DataObject NewVideoFrame(Bitmap newFrame, string userId)
+        public static DataObject newVideoFrame(Bitmap newFrame, string userId)
         {
             DataObject result = new DataObject();
-            result.DataObjectType = DataObjectTypes.NewVideoFrame;
-            result.DataObjectInfo = new NewVideoFrame(newFrame, userId);
+            result.dataObjectType = DataObjectTypes.newVideoFrame;
+            result.dataObjectInfo = new NewVideoFrame(newFrame, userId);
+            return result;
+        }
+        public static DataObject newVideoFrame(byte[] newFrame, string userId)
+        {
+            DataObject result = new DataObject();
+            result.dataObjectType = DataObjectTypes.newVideoFrame;
+            result.dataObjectInfo = new NewVideoFrame(newFrame, userId);
             return result;
         }
     }

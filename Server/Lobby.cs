@@ -4,14 +4,15 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Newtonsoft.Json;
-using ServerDLL;
+using SharedLibrary.Data;
+using SharedLibrary.Data.UDPData;
+using SharedLibrary.SerDes;
 
 namespace Server
 {
     public class Lobby
     {
         private List<User> _users;
-
         public List<User> users
         {
             get { return _users; }
@@ -42,7 +43,7 @@ namespace Server
             get { return _password; }
         }
 
-        private Thread _userUPDThread; // Поток для прослушивания UPD
+        private Thread _userUdpThread; // Поток для прослушивания UDP
         private UdpClient _udpClientListener;
         public UdpClient udpClientListener
         {
@@ -53,26 +54,26 @@ namespace Server
         }
         private UdpClient _udpClientSender;
         
-        public Lobby(string name, int capacity, string password, User owner, int UDPPort)
+        public Lobby(string name, int capacity, string password, User owner, int udpPort)
         {
-            _udpPort = UDPPort;
-            _users = new List<User>();
-            _users.Add(owner);
-            Guid myuuid = Guid.NewGuid();
-            _id = myuuid.ToString();
+            _udpPort = udpPort;
+            _udpClientListener = new UdpClient(_udpPort);
+            _udpClientSender = new UdpClient();
+            _users = new List<User> {owner};
+            _id = Guid.NewGuid().ToString();
             _name = name;
             _capacity = capacity;
             _password = password;
 
-            _userUPDThread = new Thread(udpListener);
-            _userUPDThread.IsBackground = true;
-            _userUPDThread.Start();
+            _userUdpThread = new Thread(udpListener);
+            _userUdpThread.IsBackground = true;
+            _userUdpThread.Start();
         }
         public void removeUser(User user)
         {
             foreach (var u in _users) // Оповещение пользователей об отключении
             {
-                u.SendResponseToUser(ServerResponse.UserLeavedResponse(JsonConvert.SerializeObject(user)));
+                u.sendDataObject(DataObject.userLeavedFromLobbyResponse(JsonConvert.SerializeObject(user)));
             }
             _users.RemoveAll(u => u.id == user.id);
             if (_users.Count == 0)
@@ -82,13 +83,12 @@ namespace Server
         {
             foreach (var u in _users) // Оповещение пользователей о новом подключении
             {
-                u.SendResponseToUser(ServerResponse.UserJoinedResponse(JsonConvert.SerializeObject(user)));
+                u.sendDataObject(DataObject.userJoinedToLobbyResponse(JsonConvert.SerializeObject(user)));
             }
             _users.Add(user);
         }
-        private async void udpListener()
+        private void udpListener()
         {
-            _udpClientListener = new UdpClient(this.udpPort);
             byte[] buffer = new byte[15000];
             IPEndPoint remoteIpEndPoint = null;
             while (true)
@@ -96,40 +96,36 @@ namespace Server
                 try
                 {
                     buffer = _udpClientListener.Receive(ref remoteIpEndPoint);
-                    ServerCommandConverter serverCommandConverter = new ServerCommandConverter(buffer, buffer.Length);
-                    ServerCommand serverCommand = serverCommandConverter.ServerCommand;
-                    handleCommand(serverCommand);
+                    DataObject dataObject = Deserializer.deserialize(buffer);
+                    handleCommand(dataObject);
                 }
                 catch {  return; }
             }
         }
-        private void handleCommand(ServerCommand serverCommand)
+        private void handleCommand(DataObject dataObject)
         {
-            if (serverCommand.Command == ServerCommand.Commands.NewFrame)
+            if (dataObject.dataObjectType == DataObject.DataObjectTypes.newVideoFrame)
             {
-                sendFrameToLobbyUsers(serverCommand.FrameBytes, serverCommand.UserId);
+                NewVideoFrame newVideoFrame = dataObject.dataObjectInfo as NewVideoFrame;
+                sendDataObject(dataObject, newVideoFrame.videoFrame.userId);
             }
         }
-        public void sendFrameToLobbyUsers(byte[] frameBytes, string userId)
+        private void sendDataObject(DataObject dataObject, string userId)
         {
             try
             {
-                _udpClientSender = new UdpClient();
                 foreach (var user in this._users)
                 {
                     if (user.id != userId)
                     {
-                        ServerResponse.Frame frame = new ServerResponse.Frame();
-                        frame.UserId = userId;
-                        frame.FrameBytes = frameBytes;
-                        var bytes = ServerDLL.Serializer.Serialize(ServerResponse.NewFrameResponse(frame));
+                        var bytes = Serializer.serialize(dataObject);
                         var remoteIpEndPoint = (IPEndPoint)user.handler.RemoteEndPoint;
-                        remoteIpEndPoint.Port = this.udpPort;
+                        remoteIpEndPoint.Port = _udpPort;
                         _udpClientSender.SendAsync(bytes, bytes.Length, remoteIpEndPoint);
                     }
                 }
             }
-            catch (Exception e) { Console.WriteLine(e.ToString());}
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
     }
 }

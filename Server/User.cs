@@ -1,10 +1,10 @@
-﻿using ServerDLL;
-using System;
-using System.Linq;
-using System.Net;
+﻿using System;
 using System.Net.Sockets;
 using System.Threading;
 using Newtonsoft.Json;
+using SharedLibrary.Data;
+using SharedLibrary.Data.Requests;
+using SharedLibrary.SerDes;
 
 namespace Server
 {
@@ -45,10 +45,9 @@ namespace Server
                 try
                 {
                     byte[] buffer = new byte[8000];
-                    int bytesRec = _handler.Receive(buffer);
-                    ServerCommandConverter serverCommandConverter = new ServerCommandConverter(buffer, bytesRec);
-                    ServerCommand serverCommand = serverCommandConverter.ServerCommand;
-                    handleCommand(serverCommand);
+                    _handler.Receive(buffer);
+                    DataObject dataObject = Deserializer.deserialize(buffer);
+                    handleCommand(dataObject);
                 }
                 catch
                 {
@@ -68,97 +67,85 @@ namespace Server
             }
             catch (Exception e) { Console.WriteLine("Error with end: {0}.", e.Message); }
         }
-        private void handleCommand(ServerCommand serverCommand)
+        private void handleCommand(DataObject dataObject)
         {
-            if (serverCommand.Command == ServerCommand.Commands.ChangeUserName)
+            if (dataObject.dataObjectType == DataObject.DataObjectTypes.changeUserNameRequest)
             {
-                if (String.IsNullOrEmpty(serverCommand.UserName))
+                ChangeUserName changeUserName = dataObject.dataObjectInfo as ChangeUserName;
+                if (String.IsNullOrEmpty(changeUserName.user.userName))
                 {
-                    SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
+                    sendDataObject(DataObject.errorResponse());
                     return;
                 }
-                _userName = serverCommand.UserName;
-                SendResponseToUser(ServerResponse.NameChangedResponse(JsonConvert.SerializeObject(this)));
+                _userName = changeUserName.user.userName;
+                sendDataObject(DataObject.nameChangedResponse(JsonConvert.SerializeObject(this)));
                 return;
             }
-            if (serverCommand.Command == ServerCommand.Commands.CreateLobby)
+            if (dataObject.dataObjectType == DataObject.DataObjectTypes.createLobbyRequest)
             {
-                if (serverCommand.LobbyCapacity < 2  || serverCommand.LobbyCapacity > 8 || String.IsNullOrEmpty(serverCommand.LobbyName))
+                CreateLobby createLobby = dataObject.dataObjectInfo as CreateLobby;
+                if (createLobby.lobby.capacity < 2  || createLobby.lobby.capacity > 8 || String.IsNullOrEmpty(createLobby.lobby.name))
                 {
-                    SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
+                    sendDataObject(DataObject.errorResponse());
                     return;
                 }
-                _currentLobby = Server.newLobby(serverCommand.LobbyName, serverCommand.LobbyCapacity, 
-                    serverCommand.LobbyPassword, this);
+                _currentLobby = Server.newLobby(createLobby.lobby.name, createLobby.lobby.capacity,
+                    createLobby.lobby.password, this);
                 if (_currentLobby == null)
                 {
-                    SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
+                    sendDataObject(DataObject.errorResponse());
                     return;
                 }
-                SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(_currentLobby)));
+                sendDataObject(DataObject.lobbyInfoResponse(JsonConvert.SerializeObject(_currentLobby)));
                 return;
             }
-            if (serverCommand.Command == ServerCommand.Commands.LeaveLobby)
+            if (dataObject.dataObjectType == DataObject.DataObjectTypes.leaveLobbyRequest)
             {
                 currentLobbyRemove();
                 return;
             }
-            if (serverCommand.Command == ServerCommand.Commands.GetLobbies)
+            if (dataObject.dataObjectType == DataObject.DataObjectTypes.lobbiesInfoResponse)
             {
-                SendResponseToUser(ServerDLL.ServerResponse.LobbiesResponse(JsonConvert.SerializeObject(Server.lobbies)));
+                sendDataObject(DataObject.lobbiesInfoResponse(JsonConvert.SerializeObject(Server.lobbies)));
                 return;
             }
-            if (serverCommand.Command == ServerCommand.Commands.JoinLobby)
+            if (dataObject.dataObjectType == DataObject.DataObjectTypes.joinLobbyRequest)
             {
-                Lobby temp = Server.lobbies.Find(l => serverCommand.LobbyId == l.id);
+                JoinLobby joinLobby = dataObject.dataObjectInfo as JoinLobby;
+                Lobby temp = Server.lobbies.Find(l => joinLobby.lobby.id == l.id);
                 if (temp != null && temp.users.Count != temp.capacity)
                 {
                     if (!String.IsNullOrEmpty(temp.password))
                     {
-                        if (serverCommand.LobbyPassword == temp.password)
+                        if (joinLobby.lobby.password == temp.password)
                         {
                             _currentLobby = temp;
                             _currentLobby.addUser(this);
-                            SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(_currentLobby)));
+                            sendDataObject(DataObject.lobbyInfoResponse(JsonConvert.SerializeObject(_currentLobby)));
                         }
                         else
                         {
-                            SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
+                            sendDataObject(DataObject.errorResponse());
                         }
                     }
                     else
                     {
                         _currentLobby = temp;
                         _currentLobby.addUser(this);
-                        SendResponseToUser(ServerResponse.LobbyInfoResponse(JsonConvert.SerializeObject(_currentLobby)));
+                        sendDataObject(DataObject.lobbyInfoResponse(JsonConvert.SerializeObject(_currentLobby)));
                     }
                 }
                 else
                 {
-                    SendResponseToUser(ServerDLL.ServerResponse.Responses.Error);
+                    sendDataObject(DataObject.errorResponse());
                 }
             }
         }
-        public void SendResponseToUser(ServerDLL.ServerResponse.Responses response) // Success or Error
+        public void sendDataObject(DataObject dataObject)
         {
             try
             {
-                int bytesSent =
-                    _handler.Send(ServerDLL.Serializer.Serialize(ServerResponse.CreateServerResponse(response)));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error with send command: {0}.", e.Message);
-                currentLobbyRemove();
-                Server.endUser(this);
-            }
-        }
-        public void SendResponseToUser(ServerDLL.ServerResponse response) // CreateLobby
-        {
-            try
-            {
-                int bytesSent =
-                    _handler.Send(ServerDLL.Serializer.Serialize(response));
+                _handler.Send(Serializer.serialize(dataObject));
             }
             catch (Exception e)
             {

@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
 using SharedLibrary.Data.Models;
 
 namespace SharedLibrary.Data.Responses
 {
-    class LobbyInfo
+    [Serializable]
+    public class LobbyInfo
     {
-        public LobbyModel Lobby { get; private set; }
+        public LobbyModel lobby { get; private set; }
         public LobbyInfo(string lobbyJson)
         {
-            Lobby = JsonConvert.DeserializeObject<LobbyModel>(lobbyJson);
+            lobby = JsonConvert.DeserializeObject<LobbyModel>(lobbyJson);
         }
     }
 }
