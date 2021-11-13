@@ -1,19 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Windows.Interactivity;
-using ServerDLL;
+using SharedLibrary.Data.Responses;
+using DataObject = SharedLibrary.Data.DataObject;
 using WPFClient.MVVM.ViewModel;
 
 namespace WPFClient.MVVM.View
@@ -47,18 +40,18 @@ namespace WPFClient.MVVM.View
         {
             var task = Task.Factory.StartNew(() =>
             {
-                Server.SendTCP(ServerCommand.joinLobbyCommand(lobbyId, password));
-                ServerResponseConverter serverCommandConverter = new ServerResponseConverter(Server.listenToServerResponse(), 0);
-                ServerDLL.ServerResponse serverResponse = serverCommandConverter.ServerResponse;
-                if (serverResponse.Response == ServerDLL.ServerResponse.Responses.LobbyInfo)
+                Server.sendTcp(DataObject.joinLobbyRequest(lobbyId, password));
+                DataObject receivedDataObject = Server.listenToServerTcpResponse();
+                if (receivedDataObject.dataObjectType == DataObject.DataObjectTypes.lobbyInfoResponse)
                 {
-                    ServerDLL.ServerResponse.Lobby lobby = serverResponse.lobby;
-                    Server.SetUDPPort(lobby.UDPPort);
+                    var lobbyInfoResponse = receivedDataObject.dataObjectInfo as LobbyInfo;
+                    var lobbyModel = lobbyInfoResponse.lobby;
+                    Server.setUdpPort(lobbyModel.udpPort);
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        MainViewModel.setLobbyView(lobby);
+                        MainViewModel.setLobbyView(lobbyModel);
                     });
-                    MainViewModel.CurrentView = MainViewModel.lobbyView;
+                    MainViewModel.currentView = MainViewModel.lobbyView;
                     /*MessageBox.Show("Lobby name: " + lobby.Name + "\nLobby capacity: " + lobby.Capacity + "\nLobby password: " + lobby.Password + 
                                     "\nUsers count: " + lobby.UsersCount + "\nFirst user id: " + lobby.Users[0].Id + "\nFirst user name: " + lobby.Users[0].UserName + "\nLobby id " + lobby.Id);*/
                 }

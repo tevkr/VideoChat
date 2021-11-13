@@ -109,6 +109,11 @@ namespace Server
                 NewVideoFrame newVideoFrame = dataObject.dataObjectInfo as NewVideoFrame;
                 sendDataObject(dataObject, newVideoFrame.videoFrame.userId);
             }
+            if (dataObject.dataObjectType == DataObject.DataObjectTypes.newAudioFrame)
+            {
+                NewAudioFrame newAudioFrame = dataObject.dataObjectInfo as NewAudioFrame;
+                sendDataObject(dataObject, newAudioFrame.audioFrame.userId);
+            }
         }
         private void sendDataObject(DataObject dataObject, string userId)
         {

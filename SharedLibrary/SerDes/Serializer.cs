@@ -7,9 +7,11 @@ namespace SharedLibrary.SerDes
     {
         public static byte[] serialize(object obj)
         {
-            using var ms = new MemoryStream();
-            (new BinaryFormatter()).Serialize(ms, obj);
-            return ms.ToArray();
+            using (var ms = new MemoryStream())
+            {
+                (new BinaryFormatter()).Serialize(ms, obj);
+                return ms.ToArray();
+            }
         }
     }
 }

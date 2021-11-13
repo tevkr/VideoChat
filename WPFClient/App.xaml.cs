@@ -23,7 +23,7 @@ namespace WPFClient
         {
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
-            Server.ConnectTCP();
+            Server.connectTcp();
         }
         protected override void OnExit(ExitEventArgs e)
         {

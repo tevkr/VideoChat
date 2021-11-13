@@ -1,4 +1,5 @@
 ﻿using System;
+using SharedLibrary.Data.Models;
 using WPFClient.Core;
 using WPFClient.MVVM.View;
 
@@ -11,20 +12,20 @@ namespace WPFClient.MVVM.ViewModel
         public static CreateLobbyViewModel createLobbyViewModel { get; set; }
         public static FindLobbyViewModel findLobbyViewModel { get; set; }
         public static LobbyView lobbyView { get; set; }
-        public static void setLobbyView(ServerDLL.ServerResponse.Lobby lobby)
+        public static void setLobbyView(LobbyModel lobbyModel)
         {
-            lobbyView = new LobbyView(lobby);
+            lobbyView = new LobbyView(lobbyModel);
         }
 
-        static public event EventHandler CurrentViewChanged;
+        public static event EventHandler currentViewChanged;
         private static object _currentView;
-        public static object CurrentView
+        public static object currentView
         {
             get { return _currentView; }
             set
             {
                 _currentView = value;
-                CurrentViewChanged?.Invoke(null, EventArgs.Empty);
+                currentViewChanged?.Invoke(null, EventArgs.Empty);
             }
         }
         public MainViewModel()
@@ -34,7 +35,7 @@ namespace WPFClient.MVVM.ViewModel
             createLobbyViewModel = new CreateLobbyViewModel();
             findLobbyViewModel = new FindLobbyViewModel();
             lobbyView = null;
-            CurrentView = firstLoadViewModel;
+            currentView = firstLoadViewModel;
         }
     }
 }

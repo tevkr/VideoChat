@@ -1,30 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
+﻿using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using AForge.Video.DirectShow;
-using ServerDLL;
+using DataObject = SharedLibrary.Data.DataObject;
 using WPFClient.Core;
 
 namespace WPFClient.MVVM.ViewModel
 {
     class WebCamBannerViewModel : ObservableObject
     {
-        private UdpClient client;
-
-        public void closeUdpClient()
-        {
-            client.Close();
-        }
         private string _userName;
         public string UserName
         {
@@ -85,7 +71,7 @@ namespace WPFClient.MVVM.ViewModel
             {
                 VideoFrameBitmap = bmp;
             });
-            Server.SendUDP(ServerCommand.newFrameCommand(bmp, Application.Current.Properties["LocalUserId"].ToString()));
+            Server.sendUdp(DataObject.newVideoFrame(bmp, Application.Current.Properties["LocalUserId"].ToString()));
         }
 
         public WebCamBannerViewModel(string username, string userId)

@@ -14,21 +14,21 @@
         <Button Content="Вернуться в главное меню" 
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top" 
-                Command="{Binding BackToMainMenuCommand}"/>
+                Command="{Binding backToMainMenuCommand}"/>
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Название: "/>
-                <TextBox MinWidth="200" Text="{Binding LobbyName, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox MinWidth="200" Text="{Binding lobbyName, UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Колличество человек: "/>
-                <TextBox MinWidth="134" Text="{Binding LobbyMaxCapacity, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox MinWidth="134" Text="{Binding lobbyCapacity, UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Пароль: "/>
-                <TextBox MinWidth="212" Text="{Binding LobbyPassword, UpdateSourceTrigger=PropertyChanged}"/> 
+                <TextBox MinWidth="212" Text="{Binding lobbyPassword, UpdateSourceTrigger=PropertyChanged}"/> 
             </StackPanel>
-            <Button Content="Создать и подключиться" Command="{Binding CreateAndConnectCommand}"/>
+            <Button Content="Создать и подключиться" Command="{Binding createAndConnectCommand}"/>
         </StackPanel>
     </Grid>
 </UserControl>

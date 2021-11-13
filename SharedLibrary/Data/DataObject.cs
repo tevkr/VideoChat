@@ -27,7 +27,8 @@ namespace SharedLibrary.Data
             userJoinedToLobbyResponse,
             userLeavedFromLobbyResponse,
             // UDP Data
-            newVideoFrame
+            newVideoFrame,
+            newAudioFrame
         }
         public DataObjectTypes dataObjectType { get; private set; }
         public object dataObjectInfo { get; private set; }
@@ -133,6 +134,13 @@ namespace SharedLibrary.Data
             DataObject result = new DataObject();
             result.dataObjectType = DataObjectTypes.newVideoFrame;
             result.dataObjectInfo = new NewVideoFrame(newFrame, userId);
+            return result;
+        }
+        public static DataObject newAudioFrame(byte[] newFrame, string userId)
+        {
+            DataObject result = new DataObject();
+            result.dataObjectType = DataObjectTypes.newAudioFrame;
+            result.dataObjectInfo = new NewAudioFrame(newFrame, userId);
             return result;
         }
     }

@@ -1,59 +1,56 @@
-﻿using ServerDLL;
-using System;
+﻿using SharedLibrary.SerDes;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Windows;
+using DataObject = SharedLibrary.Data.DataObject;
 
 namespace WPFClient
 {
     public static class Server
     {
-        public const string _serverHost = "127.0.0.1";
-        public const int _serverPort = 9933;
-        private static int _serverPortUDP = -1;
-        private static UdpClient udpClient = new UdpClient();
-        private static IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse(_serverHost), _serverPort);
-        private static IPEndPoint ipEndPointUDP = null;
-        private static Socket _serverSocket;
-        public static Socket ServerSocket { get { return _serverSocket; } }
-        public static void SetUDPPort(int port)
+        private const string _serverHost = "127.0.0.1";
+        private const int _serverTcpPort = 9933;
+        private static int _serverUdpPort;
+        public static void setUdpPort(int serverUdpPort)
         {
-            _serverPortUDP = port;
-            ipEndPointUDP = new IPEndPoint(IPAddress.Parse(_serverHost), _serverPortUDP);
+            _serverUdpPort = serverUdpPort;
+            remoteUdpIpEndPoint = new IPEndPoint(IPAddress.Parse(_serverHost), _serverUdpPort);
         }
-        public static int GetUDPPort()
+        public static int getUdpPort()
         {
-            return _serverPortUDP;
+            return _serverUdpPort;
         }
-        public static void ClearUDPPort()
+        public static void clearUdpPort()
         {
-            _serverPortUDP = -1;
-            ipEndPointUDP = null;
+            _serverUdpPort = -1;
+            remoteUdpIpEndPoint = null;
         }
-        public static void ConnectTCP()
+        private static UdpClient _udpClient;
+        private static IPEndPoint remoteTcpIpEndPoint;
+        private static IPEndPoint remoteUdpIpEndPoint;
+        private static Socket _serverTcpSocket;
+        static Server()
+        {
+            _serverUdpPort = -1;
+            _udpClient = new UdpClient();
+            remoteTcpIpEndPoint = new IPEndPoint(IPAddress.Parse(_serverHost), _serverTcpPort);
+            remoteUdpIpEndPoint = null;
+            _serverTcpSocket = null;
+        }
+        public static void connectTcp()
         {
             try
             {
-                _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                _serverSocket.Connect(ipEndPoint);
+                _serverTcpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                _serverTcpSocket.Connect(remoteTcpIpEndPoint);
             }
             catch { MessageBox.Show("Невозможно подключиться к серверу. (TCP)"); throw; }
         }
-        public static void ConnectUDP()
+        public static void sendTcp(DataObject dataObject)
         {
             try
             {
-                udpClient.Connect(ipEndPoint);
-            }
-            catch { MessageBox.Show("Невозможно подключиться к серверу. (UDP)"); throw; }
-        }
-        public static void SendTCP(ServerCommand serverCommand)
-        {
-            byte[] bytes = ServerDLL.Serializer.Serialize(serverCommand);
-            try
-            {
-                int bytesSent = _serverSocket.Send(bytes);
+                _serverTcpSocket.Send(Serializer.serialize(dataObject));
             }
             catch
             {
@@ -61,14 +58,14 @@ namespace WPFClient
                 throw;
             }
         }
-        public static void SendUDP(ServerCommand serverCommand)
+        public static void sendUdp(DataObject dataObject)
         {
-            if (_serverPortUDP == -1)
+            if (_serverUdpPort == -1)
                 return;
-            byte[] bytes = ServerDLL.Serializer.Serialize(serverCommand);
             try
             {
-                udpClient.Send(bytes, bytes.Length, ipEndPointUDP);
+                var bytes = Serializer.serialize(dataObject);
+                _udpClient.SendAsync(bytes, bytes.Length, remoteUdpIpEndPoint);
             }
             catch
             {
@@ -76,16 +73,15 @@ namespace WPFClient
                 throw;
             }
         }
-        public static byte[] listenToServerResponse()
+        public static DataObject listenToServerTcpResponse()
         {
             try
             {
-                while (_serverSocket.Connected)
+                while (_serverTcpSocket.Connected)
                 {
-                    //_serverSocket.ReceiveTimeout = 1000;
-                    byte[] buffer = new byte[8196];
-                    int bytesRec = _serverSocket.Receive(buffer);
-                    return buffer;
+                    byte[] buffer = new byte[8000];
+                    _serverTcpSocket.Receive(buffer);
+                    return Deserializer.deserialize(buffer);
                 }
                 return null;
             }

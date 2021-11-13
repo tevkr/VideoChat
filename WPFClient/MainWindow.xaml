@@ -12,6 +12,6 @@
     </Window.DataContext>
     
     <Grid>
-        <UserControl Content="{Binding CurrentView}"/>
+        <UserControl Content="{Binding currentView}"/>
     </Grid>
 </Window>

@@ -1,84 +1,86 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
-using ServerDLL;
+using SharedLibrary.Data.Models;
+using SharedLibrary.Data.Responses;
+using DataObject = SharedLibrary.Data.DataObject;
 using WPFClient.Core;
-using WPFClient.MVVM.View;
 
 namespace WPFClient.MVVM.ViewModel
 {
     class CreateLobbyViewModel : ObservableObject
     {
-        public AsyncRelayCommand CreateAndConnectCommand { get; set; }
-        public static RelayCommand BackToMainMenuCommand { get; set; }
+        public AsyncRelayCommand createAndConnectCommand { get; set; }
+        public static RelayCommand backToMainMenuCommand { get; set; }
 
         private string _lobbyName;
-        public string LobbyName
+        public string lobbyName
         {
             get { return _lobbyName; }
             set
             {
                 _lobbyName = value;
-                OnPropertyChanged(nameof(LobbyName));
+                OnPropertyChanged(nameof(lobbyName));
             }
         }
-        private int _lobbyMaxCapacity;
-        public int LobbyMaxCapacity
+        private int _lobbyCapacity;
+        public int lobbyCapacity
         {
-            get { return _lobbyMaxCapacity; }
+            get { return _lobbyCapacity; }
             set
             {
                 try
                 {
-                    _lobbyMaxCapacity = value;
+                    _lobbyCapacity = value;
                 }
                 catch
                 {
                     try
                     {
-                        _lobbyMaxCapacity = Convert.ToInt32(value);
+                        _lobbyCapacity = Convert.ToInt32(value);
                     }
-                    catch { }
+                    catch
+                    {
+                        _lobbyCapacity = 0;
+                    }
                 }
-                OnPropertyChanged(nameof(LobbyMaxCapacity));
+                OnPropertyChanged(nameof(lobbyCapacity));
             }
         }
         private string _lobbyPassword;
-        public string LobbyPassword
+        public string lobbyPassword
         {
             get { return _lobbyPassword; }
             set
             {
                 _lobbyPassword = value;
-                OnPropertyChanged(nameof(LobbyPassword));
+                OnPropertyChanged(nameof(lobbyPassword));
             }
         }
         public CreateLobbyViewModel()
         {
-            CreateAndConnectCommand = new AsyncRelayCommand(async (o) => await CreateAndConnectTask(o));
-            BackToMainMenuCommand = new RelayCommand(o =>
+            createAndConnectCommand = new AsyncRelayCommand(async (o) => await createAndConnectTask(o));
+            backToMainMenuCommand = new RelayCommand(o =>
             {
-                MainViewModel.CurrentView = MainViewModel.mainMenuViewModel;
+                MainViewModel.currentView = MainViewModel.mainMenuViewModel;
             });
         }
-        private async Task CreateAndConnectTask(object o)
+        private async Task createAndConnectTask(object o)
         {
             var task = Task.Factory.StartNew(() =>
             {
-                Server.SendTCP(ServerCommand.createLobbyCommand(LobbyName, LobbyMaxCapacity, LobbyPassword));
-                ServerResponseConverter serverCommandConverter = new ServerResponseConverter(Server.listenToServerResponse(), 0);
-                ServerDLL.ServerResponse serverResponse = serverCommandConverter.ServerResponse;
-                if (serverResponse.Response == ServerDLL.ServerResponse.Responses.LobbyInfo)
+                Server.sendTcp(DataObject.createLobbyRequest(_lobbyName, _lobbyCapacity, _lobbyPassword));
+                DataObject receivedDataObject = Server.listenToServerTcpResponse();
+                if (receivedDataObject.dataObjectType == DataObject.DataObjectTypes.lobbyInfoResponse)
                 {
-                    ServerDLL.ServerResponse.Lobby lobby = serverResponse.lobby;
-                    Server.SetUDPPort(lobby.UDPPort);
+                    var lobbyInfoResponse = receivedDataObject.dataObjectInfo as LobbyInfo;
+                    var lobbyModel = lobbyInfoResponse.lobby;
+                    Server.setUdpPort(lobbyModel.udpPort);
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        MainViewModel.setLobbyView(lobby);
+                        MainViewModel.setLobbyView(lobbyModel);
                     });
-                    MainViewModel.CurrentView = MainViewModel.lobbyView;
-                    /*MessageBox.Show("Lobby name: " + lobby.Name + "\nLobby capacity: " + lobby.Capacity + "\nLobby password: " + lobby.Password + 
-                                    "\nUsers count: " + lobby.UsersCount + "\nFirst user id: " + lobby.Users[0].Id + "\nFirst user name: " + lobby.Users[0].UserName + "\nLobby id " + lobby.Id);*/
+                    MainViewModel.currentView = MainViewModel.lobbyView;
                 }
                 else
                 {

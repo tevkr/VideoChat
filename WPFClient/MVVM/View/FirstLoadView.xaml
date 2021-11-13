@@ -15,9 +15,9 @@
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Введите имя пользователя: "/>
-                <TextBox x:Name="UserNameTextBox" Width="150" Text="{Binding UserNameTextBoxText, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox x:Name="UserNameTextBox" Width="150" Text="{Binding userNameTextBoxText, UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
-            <Button x:Name="EnterButton" Content="Войти" Command="{Binding EnterCommand}"/>
+            <Button x:Name="EnterButton" Content="Войти" Command="{Binding enterCommand}"/>
         </StackPanel>
     </Grid>
 </UserControl>

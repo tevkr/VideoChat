@@ -4,17 +4,17 @@ namespace WPFClient.MVVM.ViewModel
 {
     class MainMenuViewModel : ObservableObject
     {
-        public static RelayCommand CreateLobbyCommand { get; set; }
-        public static RelayCommand FindLobbyCommand { get; set; }
+        public static RelayCommand createLobbyCommand { get; set; }
+        public static RelayCommand findLobbyCommand { get; set; }
         public MainMenuViewModel()
         {
-            CreateLobbyCommand = new RelayCommand(o =>
+            createLobbyCommand = new RelayCommand(o =>
             {
-                MainViewModel.CurrentView = MainViewModel.createLobbyViewModel;
+                MainViewModel.currentView = MainViewModel.createLobbyViewModel;
             });
-            FindLobbyCommand = new RelayCommand(o =>
+            findLobbyCommand = new RelayCommand(o =>
             {
-                MainViewModel.CurrentView = MainViewModel.findLobbyViewModel;
+                MainViewModel.currentView = MainViewModel.findLobbyViewModel;
             });
         }
     }

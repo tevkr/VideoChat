@@ -1,30 +1,33 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Xml.Serialization;
 using AForge.Video.DirectShow;
-using ServerDLL;
+using SharedLibrary.Data.Models;
+using SharedLibrary.Data.Responses;
+using SharedLibrary.Data.UDPData;
+using SharedLibrary.SerDes;
 using WPFClient.Core;
+using DataObject = SharedLibrary.Data.DataObject;
+using NAudio.CoreAudioApi;
+using NAudio.Wave;
 using WPFClient.MVVM.View;
 
 namespace WPFClient.MVVM.ViewModel
 {
     class LobbyViewModel : ObservableObject
     {
+        //поток для нашей речи
+        WaveIn input;
+        //поток для речи собеседника
+        WaveOut output;
+        //буфферный поток для передачи через сеть
+        BufferedWaveProvider bufferStream;
         private UdpClient client;
         public static AsyncRelayCommand BackToMainMenuCommand { get; set; }
 
@@ -73,8 +76,112 @@ namespace WPFClient.MVVM.ViewModel
             }
         }
 
-        private bool _switchWebCam;
+        private bool _switchRecordingDevice;
+        public bool SwitchRecordingDevice
+        {
+            get { return _switchRecordingDevice; }
+            set
+            {
+                _switchRecordingDevice = value;
+                OnPropertyChanged(nameof(SwitchRecordingDevice));
+            }
+        }
 
+        private MMDeviceCollection _recordingDevices;
+        public MMDeviceCollection RecordingDevices
+        {
+            get { return _recordingDevices; }
+            set
+            {
+                _recordingDevices = value;
+                OnPropertyChanged(nameof(RecordingDevices));
+            }
+        }
+
+        private MMDevice _selectedRecordingDevice;
+        public MMDevice SelectedRecordingDevice
+        {
+            get { return _selectedRecordingDevice; }
+            set
+            {
+                _selectedRecordingDevice = value;
+                OnPropertyChanged(nameof(SelectedRecordingDevice));
+            }
+        }
+
+        private int getNumberOfSelectedRecordingDevice()
+        {
+            int result = -1;
+            //create enumerator
+            var enumerator = new MMDeviceEnumerator();
+            //cycle through all audio devices
+            for (int i = 0; i < WaveIn.DeviceCount; i++)
+                if (enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active)[i] ==
+                    _selectedRecordingDevice)
+                    result = i;
+            //clean up
+            enumerator.Dispose();
+            return result;
+        }
+
+        private void VoiceInput(object sender, WaveInEventArgs e)
+        {
+            try
+            {
+                Server.sendUdp(DataObject.newAudioFrame(e.Buffer, Application.Current.Properties["LocalUserId"].ToString()));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+        private bool _switchCaptureDevice;
+        public bool SwitchCaptureDevice
+        {
+            get { return _switchCaptureDevice; }
+            set
+            {
+                _switchCaptureDevice = value;
+                OnPropertyChanged(nameof(SwitchCaptureDevice));
+            }
+        }
+        private MMDeviceCollection _captureDevices;
+        public MMDeviceCollection CaptureDevices
+        {
+            get { return _captureDevices; }
+            set
+            {
+                _captureDevices = value;
+                OnPropertyChanged(nameof(CaptureDevices));
+            }
+        }
+
+        private MMDevice _selectedCaptureDevice;
+        public MMDevice SelectedCaptureDevice
+        {
+            get { return _selectedCaptureDevice; }
+            set
+            {
+                _selectedCaptureDevice = value;
+                OnPropertyChanged(nameof(SelectedCaptureDevice));
+            }
+        }
+        private int getNumberOfSelectedCaptureDevice()
+        {
+            int result = -1;
+            //create enumerator
+            var enumerator = new MMDeviceEnumerator();
+            //cycle through all audio devices
+            for (int i = 0; i < WaveOut.DeviceCount; i++)
+                if (enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)[i] ==
+                    _selectedRecordingDevice)
+                    result = i;
+            //clean up
+            enumerator.Dispose();
+            return result;
+        }
+
+        private bool _switchWebCam;
         public bool SwitchWebCam
         {
             get { return _switchWebCam; }
@@ -85,7 +192,7 @@ namespace WPFClient.MVVM.ViewModel
                     ((WebCamBannerViewModel)_localWebCamView.DataContext).VideoSource.Start();
                 else
                     ((WebCamBannerViewModel)_localWebCamView.DataContext).VideoSource.SignalToStop();
-                OnPropertyChanged(nameof(LobbyUserStats));
+                OnPropertyChanged(nameof(SwitchWebCam));
             }
         }
 
@@ -114,28 +221,55 @@ namespace WPFClient.MVVM.ViewModel
             }
         }
 
-        public LobbyViewModel(ServerDLL.ServerResponse.Lobby CurrentLobby)
+        public LobbyViewModel(LobbyModel lobbyModel)
         {
             _webCamViews = new ObservableCollection<WebCamBannerView>();
             BackToMainMenuCommand = new AsyncRelayCommand(async (o) => await BackToMainMenuTask(o));
             VideoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
             _currentUserLeaved = false;
-            if (CurrentLobby != null)
+            if (lobbyModel != null)
             {
-                LobbyId = CurrentLobby.Id;
-                LobbyName = CurrentLobby.Name;
-                LobbyUserStats = $"{CurrentLobby.UsersCount}/{CurrentLobby.Capacity}";
-                _lobbyCapacity = CurrentLobby.Capacity;
-                _usersCount = CurrentLobby.UsersCount;
-                for (int i = 0; i < CurrentLobby.UsersCount; i++)
+                LobbyId = lobbyModel.id;
+                LobbyName = lobbyModel.name;
+                LobbyUserStats = $"{lobbyModel.users.Count}/{lobbyModel.capacity}";
+                _lobbyCapacity = lobbyModel.capacity;
+                _usersCount = lobbyModel.users.Count;
+                for (int i = 0; i < lobbyModel.users.Count; i++)
                 {
-                    WebCamViews.Add(new WebCamBannerView(CurrentLobby.Users[i].UserName, CurrentLobby.Users[i].Id));
-                    if (CurrentLobby.Users[i].Id == Application.Current.Properties["LocalUserId"].ToString())
+                    WebCamViews.Add(new WebCamBannerView(lobbyModel.users[i].userName, lobbyModel.users[i].id));
+                    if (lobbyModel.users[i].id == Application.Current.Properties["LocalUserId"].ToString())
                         _localWebCamView = WebCamViews.Last();
                 }
                 if (VideoDevices.Count >= 1)
                     SelectedFilterInfo = VideoDevices[0];
                 SwitchWebCam = true;
+
+
+                //create enumerator
+                var enumerator = new MMDeviceEnumerator();
+                //cycle through all audio devices
+                RecordingDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active);
+                SelectedRecordingDevice = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active)[0];
+                CaptureDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
+                SelectedCaptureDevice = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)[0];
+                //clean up
+                enumerator.Dispose();
+
+
+                input = new WaveIn();
+                input.DeviceNumber = getNumberOfSelectedRecordingDevice();
+                input.WaveFormat = new WaveFormat(8000, 16, 1);
+                input.DataAvailable += VoiceInput;
+                input.StartRecording();
+
+
+                output = new WaveOut();
+                output.DeviceNumber = getNumberOfSelectedCaptureDevice();
+                bufferStream = new BufferedWaveProvider(new WaveFormat(8000, 16, 1));
+                output.Init(bufferStream);
+                output.Play();
+
+
                 waitForLobbyChanges();
                 Thread th = new Thread(waitForNewFrames);
                 th.IsBackground = true;
@@ -154,18 +288,22 @@ namespace WPFClient.MVVM.ViewModel
                     ((WebCamBannerViewModel)_localWebCamView.DataContext).VideoSource.SignalToStop();
                     
                 });
-                for (int i = 0; i < WebCamViews.Count; i++)
-                {
-                    try
-                    {
-                        ((WebCamBannerViewModel)WebCamViews[i].DataContext).closeUdpClient();
-                    }
-                    catch { }
-                }
-                Server.SendTCP(ServerCommand.leaveLobbyCommand());
-                Server.ClearUDPPort();
-                MainViewModel.CurrentView = MainViewModel.mainMenuViewModel;
                 _currentUserLeaved = true;
+                Server.sendTcp(DataObject.leaveLobbyRequest());
+                Server.clearUdpPort();
+                if (output != null)
+                {
+                    output.Stop();
+                    output.Dispose();
+                    output = null;
+                }
+                if (input != null)
+                {
+                    input.Dispose();
+                    input = null;
+                }
+                bufferStream = null;
+                MainViewModel.currentView = MainViewModel.mainMenuViewModel;
             });
             await task;
         }
@@ -175,28 +313,29 @@ namespace WPFClient.MVVM.ViewModel
             {
                 while (true)
                 {
-                    ServerResponseConverter serverCommandConverter = new ServerResponseConverter(Server.listenToServerResponse(), 0);
-                    ServerDLL.ServerResponse.Responses response = serverCommandConverter.ServerResponse.Response;
-                    if (response == ServerDLL.ServerResponse.Responses.UserJoined)
+                    DataObject receivedDataObject = Server.listenToServerTcpResponse();
+                    if (receivedDataObject.dataObjectType == DataObject.DataObjectTypes.userJoinedToLobbyResponse)
                     {
+                        var userJoinedToLobbyResponse = receivedDataObject.dataObjectInfo as UserJoinedToLobby;
+                        var userModel = userJoinedToLobbyResponse.user;
                         Application.Current.Dispatcher.Invoke(() =>
                         {
                             _usersCount++;
                             LobbyUserStats = $"{_usersCount}/{_lobbyCapacity}";
-                            WebCamViews.Add(new WebCamBannerView(serverCommandConverter.ServerResponse.user.UserName,
-                                serverCommandConverter.ServerResponse.user.Id));
+                            WebCamViews.Add(new WebCamBannerView(userModel.userName, userModel.id));
                         });
                     }
-                    else if (response == ServerDLL.ServerResponse.Responses.UserLeaved)
+                    else if (receivedDataObject.dataObjectType == DataObject.DataObjectTypes.userLeavedFromLobbyResponse)
                     {
+                        var userLeavedFromLobbyResponse = receivedDataObject.dataObjectInfo as UserLeavedFromLobby;
+                        var userModel = userLeavedFromLobbyResponse.user;
                         Application.Current.Dispatcher.Invoke(() =>
                         {
                             _usersCount--;
                             LobbyUserStats = $"{_usersCount}/{_lobbyCapacity}";
                             foreach (var webCamView in WebCamViews.ToArray())
                             {
-                                if (((WebCamBannerViewModel)webCamView.DataContext).UserId ==
-                                    serverCommandConverter.ServerResponse.user.Id)
+                                if (((WebCamBannerViewModel)webCamView.DataContext).UserId == userModel.id)
                                 {
                                     WebCamViews.Remove(webCamView);
                                 }
@@ -211,7 +350,7 @@ namespace WPFClient.MVVM.ViewModel
         }
         private async void waitForNewFrames()
         {
-            client = new UdpClient(Server.GetUDPPort());
+            client = new UdpClient(Server.getUdpPort());
             byte[] buffer = new byte[15000];
             IPEndPoint remoteIpEndPoint = null;
             while (true)
@@ -219,18 +358,18 @@ namespace WPFClient.MVVM.ViewModel
                 try
                 {
                     buffer = client.Receive(ref remoteIpEndPoint);
-                    ServerResponseConverter serverResponseConverter =
-                        new ServerResponseConverter(buffer, buffer.Length);
-                    ServerResponse serverResponse = serverResponseConverter.ServerResponse;
-                    if (serverResponse.Response == ServerDLL.ServerResponse.Responses.NewFrame)
+                    DataObject receivedDataObject = Deserializer.deserialize(buffer);
+                    if (receivedDataObject.dataObjectType == DataObject.DataObjectTypes.newVideoFrame)
                     {
+                        var newVideoFrame = receivedDataObject.dataObjectInfo as NewVideoFrame;
+                        var videoFrame = newVideoFrame.videoFrame;
                         Application.Current.Dispatcher.Invoke(() =>
                         {
                             foreach (var webCamView in WebCamViews)
                             {
-                                if (((WebCamBannerViewModel)webCamView.DataContext).UserId == serverResponse.frame.UserId)
+                                if (((WebCamBannerViewModel)webCamView.DataContext).UserId == videoFrame.userId)
                                 {
-                                    using (var ms = new System.IO.MemoryStream(serverResponse.frame.FrameBytes))
+                                    using (var ms = new System.IO.MemoryStream(videoFrame.frameBytes))
                                     {
                                         var bmp = new Bitmap(ms);
                                         ((WebCamBannerViewModel)webCamView.DataContext).VideoFrameBitmap = bmp;
@@ -239,12 +378,20 @@ namespace WPFClient.MVVM.ViewModel
                             }
                         });
                     }
+                    if (receivedDataObject.dataObjectType == DataObject.DataObjectTypes.newAudioFrame)
+                    {
+                        var newAudioFrame = receivedDataObject.dataObjectInfo as NewAudioFrame;
+                        var audioFrame = newAudioFrame.audioFrame;
+                        if (audioFrame.userId != Application.Current.Properties["LocalUserId"].ToString())
+                            bufferStream.AddSamples(audioFrame.frameBytes, 0, Buffer.ByteLength(audioFrame.frameBytes));
+                    }
+                    if (_usersCount <= 0 || _currentUserLeaved)
+                    {
+                        try { client.Close(); } catch { }
+                        break;
+                    }
                 }
-                catch (Exception e)
-                {
-                    string asd = e.ToString();
-                    string a = asd;
-                }
+                catch { }
             }
         }
     }
