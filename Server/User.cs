@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Threading;
 using Newtonsoft.Json;
+using Server.Database;
 using SharedLibrary.Data;
 using SharedLibrary.Data.Requests;
 using SharedLibrary.SerDes;
@@ -31,7 +32,8 @@ namespace Server
         public User(Socket socket)
         {
             _currentLobby = null;
-            _id = Guid.NewGuid().ToString();
+            _id = "unknown";
+            _userName = "guest";
             _handler = socket;
             _userThread = new Thread(tcpListener);
             _userThread.IsBackground = true;
@@ -65,20 +67,56 @@ namespace Server
                 _handler.Close();
                 _userThread.Abort();
             }
-            catch (Exception e) { Console.WriteLine("Error with end: {0}.", e.Message); }
+            catch { }
         }
         private void handleCommand(DataObject dataObject)
         {
-            if (dataObject.dataObjectType == DataObject.DataObjectTypes.changeUserNameRequest)
+            if (dataObject.dataObjectType == DataObject.DataObjectTypes.signUpRequest)
             {
-                ChangeUserName changeUserName = dataObject.dataObjectInfo as ChangeUserName;
-                if (String.IsNullOrEmpty(changeUserName.user.userName))
+                SignUp signUp = dataObject.dataObjectInfo as SignUp;
+                if (String.IsNullOrEmpty(signUp.user.userName))
                 {
-                    sendDataObject(DataObject.errorResponse());
+                    sendDataObject(DataObject.errorResponse("Empty username."));
                     return;
                 }
-                _userName = changeUserName.user.userName;
-                sendDataObject(DataObject.nameChangedResponse(JsonConvert.SerializeObject(this)));
+                if (String.IsNullOrEmpty(signUp.user.password))
+                {
+                    sendDataObject(DataObject.errorResponse("Empty password."));
+                    return;
+                }
+                if (signUp.user.password.Length <= 2)
+                {
+                    sendDataObject(DataObject.errorResponse("Short password."));
+                    return;
+                }
+                if (PostgreService.userExists(signUp.user.userName))
+                {
+                    sendDataObject(DataObject.errorResponse("Username is already taken."));
+                    return;
+                }
+                _id = Guid.NewGuid().ToString();
+                _userName = signUp.user.userName;
+                PostgreService.addUser(_id, _userName, signUp.user.password);
+                sendDataObject(DataObject.userInfoResponse(JsonConvert.SerializeObject(this)));
+                return;
+            }
+            if (dataObject.dataObjectType == DataObject.DataObjectTypes.loginInRequest)
+            {
+                LoginIn loginIn = dataObject.dataObjectInfo as LoginIn;
+                if (!PostgreService.userExists(loginIn.user.userName))
+                {
+                    sendDataObject(DataObject.errorResponse("There is no user with given username."));
+                    return;
+                }
+                if (!PostgreService.correctCredentials(loginIn.user.userName, loginIn.user.password))
+                {
+                    sendDataObject(DataObject.errorResponse("Incorrect credentials."));
+                    return;
+                }
+                var user = PostgreService.getUserIdAndUsername(loginIn.user.userName);
+                _id = user.Item1;
+                _userName = user.Item2;
+                sendDataObject(DataObject.userInfoResponse(JsonConvert.SerializeObject(this)));
                 return;
             }
             if (dataObject.dataObjectType == DataObject.DataObjectTypes.createLobbyRequest)
@@ -86,14 +124,14 @@ namespace Server
                 CreateLobby createLobby = dataObject.dataObjectInfo as CreateLobby;
                 if (createLobby.lobby.capacity < 2  || createLobby.lobby.capacity > 8 || String.IsNullOrEmpty(createLobby.lobby.name))
                 {
-                    sendDataObject(DataObject.errorResponse());
+                    sendDataObject(DataObject.errorResponse("Problem with capacity or lobby name."));
                     return;
                 }
                 _currentLobby = Server.newLobby(createLobby.lobby.name, createLobby.lobby.capacity,
                     createLobby.lobby.password, this);
                 if (_currentLobby == null)
                 {
-                    sendDataObject(DataObject.errorResponse());
+                    sendDataObject(DataObject.errorResponse("Too many lobbies have been created."));
                     return;
                 }
                 sendDataObject(DataObject.lobbyInfoResponse(JsonConvert.SerializeObject(_currentLobby)));
@@ -104,7 +142,7 @@ namespace Server
                 currentLobbyRemove();
                 return;
             }
-            if (dataObject.dataObjectType == DataObject.DataObjectTypes.lobbiesInfoResponse)
+            if (dataObject.dataObjectType == DataObject.DataObjectTypes.getLobbiesRequest)
             {
                 sendDataObject(DataObject.lobbiesInfoResponse(JsonConvert.SerializeObject(Server.lobbies)));
                 return;
@@ -125,7 +163,7 @@ namespace Server
                         }
                         else
                         {
-                            sendDataObject(DataObject.errorResponse());
+                            sendDataObject(DataObject.errorResponse("Wrong password."));
                         }
                     }
                     else
@@ -137,7 +175,7 @@ namespace Server
                 }
                 else
                 {
-                    sendDataObject(DataObject.errorResponse());
+                    sendDataObject(DataObject.errorResponse("Unable to connect to the lobby."));
                 }
             }
         }
@@ -147,9 +185,8 @@ namespace Server
             {
                 _handler.Send(Serializer.serialize(dataObject));
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine("Error with send command: {0}.", e.Message);
                 currentLobbyRemove();
                 Server.endUser(this);
             }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Server.Database;
 
 namespace Server
 {
@@ -14,6 +15,12 @@ namespace Server
         private static Thread _serverThread; // Поток для прослушивания подключений новых пользователей
         static void Main(string[] args)
         {
+            if (!PostgreService.testConnection())
+            {
+                Console.WriteLine("Can't connect to PostreSQL Server.");
+                return;
+            }
+            PostgreService.init();
             _serverHost = ConfigurationManager.AppSettings.Get("ServerHost");
             _serverPort = int.Parse(ConfigurationManager.AppSettings.Get("ServerPort"));
 

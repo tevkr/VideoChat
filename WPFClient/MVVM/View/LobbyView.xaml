@@ -21,13 +21,11 @@
                           x:Name="VideoDevicesComboBox"/>
                 <CheckBox Content="Веб-камера" IsChecked="{Binding SwitchWebCam, Mode=TwoWay}" />
                 <ComboBox Width="100" ItemsSource="{Binding RecordingDevices}"
-                          DisplayMemberPath="Name"
-                          SelectedItem="{Binding Path=SelectedRecordingDevice}"
+                          SelectedIndex="{Binding SelectedRecordingDeviceIndex}"
                           x:Name="RecordingDevicesComboBox"/>
                 <CheckBox Content="Микрофон" IsChecked="{Binding SwitchRecordingDevice, Mode=TwoWay}" />
                 <ComboBox Width="100" ItemsSource="{Binding CaptureDevices}"
-                          DisplayMemberPath="Name"
-                          SelectedItem="{Binding Path=SelectedCaptureDevice}"
+                          SelectedIndex="{Binding SelectedCaptureDeviceIndex}"
                           x:Name="CaptureDevicesComboBox"/>
                 <CheckBox Content="Гарнитура" IsChecked="{Binding SwitchCaptureDevice, Mode=TwoWay}" />
             </StackPanel>

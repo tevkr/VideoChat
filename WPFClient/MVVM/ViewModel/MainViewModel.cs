@@ -11,6 +11,7 @@ namespace WPFClient.MVVM.ViewModel
         public static MainMenuViewModel mainMenuViewModel { get; set; }
         public static CreateLobbyViewModel createLobbyViewModel { get; set; }
         public static FindLobbyViewModel findLobbyViewModel { get; set; }
+        public static SignUpViewModel signUpViewModel { get; set; }
         public static LobbyView lobbyView { get; set; }
         public static void setLobbyView(LobbyModel lobbyModel)
         {
@@ -34,6 +35,7 @@ namespace WPFClient.MVVM.ViewModel
             mainMenuViewModel = new MainMenuViewModel();
             createLobbyViewModel = new CreateLobbyViewModel();
             findLobbyViewModel = new FindLobbyViewModel();
+            signUpViewModel = new SignUpViewModel();
             lobbyView = null;
             currentView = firstLoadViewModel;
         }

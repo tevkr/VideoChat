@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
@@ -28,6 +29,7 @@ namespace WPFClient.MVVM.ViewModel
         WaveOut output;
         //буфферный поток для передачи через сеть
         BufferedWaveProvider bufferStream;
+        WaveFormat commonFormat = new WaveFormat(16000, 16, 1);
         private UdpClient client;
         public static AsyncRelayCommand BackToMainMenuCommand { get; set; }
 
@@ -82,13 +84,41 @@ namespace WPFClient.MVVM.ViewModel
             get { return _switchRecordingDevice; }
             set
             {
+                if (value)
+                {
+                    input.StartRecording();
+                }
+                else
+                {
+                    input.StopRecording();
+                }
                 _switchRecordingDevice = value;
                 OnPropertyChanged(nameof(SwitchRecordingDevice));
             }
         }
 
-        private MMDeviceCollection _recordingDevices;
-        public MMDeviceCollection RecordingDevices
+        private List<string> getWaveInDevices()
+        {
+            List<string> result = new List<string>();
+            MMDeviceEnumerator enumerator = new MMDeviceEnumerator();
+            int waveInDevices = WaveIn.DeviceCount;
+            for (int waveInDevice = 0; waveInDevice < waveInDevices; waveInDevice++)
+            {
+                WaveInCapabilities deviceInfo = WaveIn.GetCapabilities(waveInDevice);
+                foreach (var device in enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.All))
+                {
+                    if (device.FriendlyName.StartsWith(deviceInfo.ProductName))
+                    {
+                        result.Add(device.FriendlyName);
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+
+        private List<string> _recordingDevices;
+        public List<string> RecordingDevices
         {
             get { return _recordingDevices; }
             set
@@ -98,33 +128,24 @@ namespace WPFClient.MVVM.ViewModel
             }
         }
 
-        private MMDevice _selectedRecordingDevice;
-        public MMDevice SelectedRecordingDevice
+        private int _selectedRecordingDeviceIndex;
+        public int SelectedRecordingDeviceIndex
         {
-            get { return _selectedRecordingDevice; }
+            get { return _selectedRecordingDeviceIndex; }
             set
             {
-                _selectedRecordingDevice = value;
-                OnPropertyChanged(nameof(SelectedRecordingDevice));
+                if (input != null)
+                    input.Dispose();
+                input = new WaveIn();
+                input.DeviceNumber = value;
+                input.WaveFormat = commonFormat;
+                input.DataAvailable += VoiceInput;
+                SwitchRecordingDevice = _switchRecordingDevice;
+                _selectedRecordingDeviceIndex = value;
+                OnPropertyChanged(nameof(SelectedRecordingDeviceIndex));
             }
         }
-
-        private int getNumberOfSelectedRecordingDevice()
-        {
-            int result = -1;
-            //create enumerator
-            var enumerator = new MMDeviceEnumerator();
-            //cycle through all audio devices
-            for (int i = 0; i < WaveIn.DeviceCount; i++)
-                if (enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active)[i] ==
-                    _selectedRecordingDevice)
-                    result = i;
-            //clean up
-            enumerator.Dispose();
-            return result;
-        }
-
-        private void VoiceInput(object sender, WaveInEventArgs e)
+        private async void VoiceInput(object sender, WaveInEventArgs e)
         {
             try
             {
@@ -141,12 +162,42 @@ namespace WPFClient.MVVM.ViewModel
             get { return _switchCaptureDevice; }
             set
             {
+                if (value)
+                {
+                    bufferStream = new BufferedWaveProvider(commonFormat);
+                    output.Init(bufferStream);
+                    output.Play();
+                }
+                else
+                {
+                    output.Pause();
+                }
                 _switchCaptureDevice = value;
                 OnPropertyChanged(nameof(SwitchCaptureDevice));
             }
         }
-        private MMDeviceCollection _captureDevices;
-        public MMDeviceCollection CaptureDevices
+
+        private List<string> getWaveOutDevices()
+        {
+            List<string> result = new List<string>();
+            MMDeviceEnumerator enumerator = new MMDeviceEnumerator();
+            int waveOutDevices = WaveOut.DeviceCount;
+            for (int waveOutDevice = 0; waveOutDevice < waveOutDevices; waveOutDevice++)
+            {
+                WaveOutCapabilities deviceInfo = WaveOut.GetCapabilities(waveOutDevice);
+                foreach (var device in enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.All))
+                {
+                    if (device.FriendlyName.StartsWith(deviceInfo.ProductName))
+                    {
+                        result.Add(device.FriendlyName);
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+        private List<string> _captureDevices;
+        public List<string> CaptureDevices
         {
             get { return _captureDevices; }
             set
@@ -156,29 +207,25 @@ namespace WPFClient.MVVM.ViewModel
             }
         }
 
-        private MMDevice _selectedCaptureDevice;
-        public MMDevice SelectedCaptureDevice
+        private int _selectedCaptureDeviceIndex;
+        public int SelectedCaptureDeviceIndex
         {
-            get { return _selectedCaptureDevice; }
+            get { return _selectedCaptureDeviceIndex; }
             set
             {
-                _selectedCaptureDevice = value;
-                OnPropertyChanged(nameof(SelectedCaptureDevice));
+                if (output != null)
+                {
+                    output.Stop();
+                    output.Dispose();
+                }
+                output = new WaveOut();
+                output.DeviceNumber = value;
+                bufferStream = new BufferedWaveProvider(commonFormat);
+                output.Init(bufferStream);
+                SwitchCaptureDevice = _switchCaptureDevice;
+                _selectedCaptureDeviceIndex = value;
+                OnPropertyChanged(nameof(SelectedCaptureDeviceIndex));
             }
-        }
-        private int getNumberOfSelectedCaptureDevice()
-        {
-            int result = -1;
-            //create enumerator
-            var enumerator = new MMDeviceEnumerator();
-            //cycle through all audio devices
-            for (int i = 0; i < WaveOut.DeviceCount; i++)
-                if (enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)[i] ==
-                    _selectedRecordingDevice)
-                    result = i;
-            //clean up
-            enumerator.Dispose();
-            return result;
         }
 
         private bool _switchWebCam;
@@ -245,29 +292,18 @@ namespace WPFClient.MVVM.ViewModel
                 SwitchWebCam = true;
 
 
+                bufferStream = new BufferedWaveProvider(commonFormat);
                 //create enumerator
                 var enumerator = new MMDeviceEnumerator();
                 //cycle through all audio devices
-                RecordingDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active);
-                SelectedRecordingDevice = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active)[0];
-                CaptureDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
-                SelectedCaptureDevice = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)[0];
+                RecordingDevices = getWaveInDevices();
+                SelectedRecordingDeviceIndex = 0;
+                CaptureDevices = getWaveOutDevices();
+                SelectedCaptureDeviceIndex = 0;
                 //clean up
                 enumerator.Dispose();
-
-
-                input = new WaveIn();
-                input.DeviceNumber = getNumberOfSelectedRecordingDevice();
-                input.WaveFormat = new WaveFormat(8000, 16, 1);
-                input.DataAvailable += VoiceInput;
-                input.StartRecording();
-
-
-                output = new WaveOut();
-                output.DeviceNumber = getNumberOfSelectedCaptureDevice();
-                bufferStream = new BufferedWaveProvider(new WaveFormat(8000, 16, 1));
-                output.Init(bufferStream);
-                output.Play();
+                SwitchRecordingDevice = true;
+                SwitchCaptureDevice = true;
 
 
                 waitForLobbyChanges();
@@ -294,15 +330,22 @@ namespace WPFClient.MVVM.ViewModel
                 if (output != null)
                 {
                     output.Stop();
-                    output.Dispose();
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        output.Dispose();
+                    });
                     output = null;
                 }
                 if (input != null)
                 {
-                    input.Dispose();
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        input.Dispose();
+                    });
                     input = null;
                 }
                 bufferStream = null;
+                client.Dispose();
                 MainViewModel.currentView = MainViewModel.mainMenuViewModel;
             });
             await task;
@@ -363,6 +406,7 @@ namespace WPFClient.MVVM.ViewModel
                     {
                         var newVideoFrame = receivedDataObject.dataObjectInfo as NewVideoFrame;
                         var videoFrame = newVideoFrame.videoFrame;
+                        if (videoFrame.userId == Application.Current.Properties["LocalUserId"].ToString()) continue; // TODO REMOVE THIS LINE
                         Application.Current.Dispatcher.Invoke(() =>
                         {
                             foreach (var webCamView in WebCamViews)
@@ -382,8 +426,7 @@ namespace WPFClient.MVVM.ViewModel
                     {
                         var newAudioFrame = receivedDataObject.dataObjectInfo as NewAudioFrame;
                         var audioFrame = newAudioFrame.audioFrame;
-                        if (audioFrame.userId != Application.Current.Properties["LocalUserId"].ToString())
-                            bufferStream.AddSamples(audioFrame.frameBytes, 0, Buffer.ByteLength(audioFrame.frameBytes));
+                        bufferStream.AddSamples(audioFrame.frameBytes, 0, audioFrame.frameBytes.Length);
                     }
                     if (_usersCount <= 0 || _currentUserLeaved)
                     {

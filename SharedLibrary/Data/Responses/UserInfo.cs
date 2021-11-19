@@ -5,10 +5,10 @@ using SharedLibrary.Data.Models;
 namespace SharedLibrary.Data.Responses
 {
     [Serializable]
-    public class NameChanged
+    public class UserInfo
     {
         public UserModel user { get; private set; }
-        public NameChanged(string userJson)
+        public UserInfo(string userJson)
         {
             user = JsonConvert.DeserializeObject<UserModel>(userJson);
         }

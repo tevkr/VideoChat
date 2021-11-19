@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="WPFClient.MVVM.View.FirstLoadView"
+﻿<UserControl x:Class="WPFClient.MVVM.View.SignUpView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -6,10 +6,9 @@
              xmlns:local="clr-namespace:WPFClient.MVVM.View"
              xmlns:viewModel="clr-namespace:WPFClient.MVVM.ViewModel"
              mc:Ignorable="d" 
-             d:DesignHeight="450"
-             d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.DataContext>
-        <viewModel:FirstLoadViewModel/>
+        <viewModel:SignUpViewModel/>
     </UserControl.DataContext>
     <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
         <Grid.RowDefinitions>
@@ -23,12 +22,12 @@
             <ColumnDefinition></ColumnDefinition>
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        <TextBlock Text="Вход" TextAlignment="Center" FontSize="16" Grid.Row="0" Grid.ColumnSpan="2"/>
+        <TextBlock Text="Регистрация" TextAlignment="Center" FontSize="16" Grid.Row="0" Grid.ColumnSpan="2"/>
         <TextBlock Text="Имя пользователя:" Grid.Row="1" Grid.Column="0"/>
         <TextBox x:Name="UserNameTextBox" Grid.Row="1" Grid.Column="1" Width="150" Text="{Binding userNameTextBoxText, UpdateSourceTrigger=PropertyChanged}"/>
         <TextBlock Text="Пароль:" Grid.Row="2" Grid.Column="0"/>
         <TextBox x:Name="PasswordTextBox" Grid.Row="2" Grid.Column="1" Width="150" Text="{Binding passwordTextBoxText, UpdateSourceTrigger=PropertyChanged}"/>
-        <Button x:Name="EnterButton" Grid.Row="3" Grid.ColumnSpan="2" Content="Войти" Command="{Binding loginInCommand}"/>
-        <Button x:Name="SwitchToSignUpButton" Grid.Row="4" Grid.ColumnSpan="2" Content="Перейти на форму регистрации" Command="{Binding switchToSignUpCommand}"/>
+        <Button x:Name="EnterButton" Grid.Row="3" Grid.ColumnSpan="2" Content="Зарегистрироваться и войти" Command="{Binding signUpCommand}"/>
+        <Button x:Name="SwitchToSignUpButton" Grid.Row="4" Grid.ColumnSpan="2" Content="Перейти на форму входа" Command="{Binding switchToLoginInCommand}"/>
     </Grid>
 </UserControl>

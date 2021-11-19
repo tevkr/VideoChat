@@ -45,6 +45,7 @@ namespace Server
 
         private Thread _userUdpThread; // Поток для прослушивания UDP
         private UdpClient _udpClientListener;
+        [JsonIgnore]
         public UdpClient udpClientListener
         {
             get

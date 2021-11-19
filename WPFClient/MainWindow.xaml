@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:WPFClient"
         xmlns:viewModel="clr-namespace:WPFClient.MVVM.ViewModel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" ResizeMode="NoResize">
+        Title="VideoChat" Height="450" Width="800" ResizeMode="NoResize">
     <Window.DataContext>
         <viewModel:MainViewModel/>
     </Window.DataContext>

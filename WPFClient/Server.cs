@@ -8,7 +8,7 @@ namespace WPFClient
 {
     public static class Server
     {
-        private const string _serverHost = "127.0.0.1";
+        private const string _serverHost = "192.168.1.214";
         private const int _serverTcpPort = 9933;
         private static int _serverUdpPort;
         public static void setUdpPort(int serverUdpPort)

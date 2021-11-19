@@ -13,7 +13,8 @@ namespace SharedLibrary.Data
         public enum DataObjectTypes
         {
             // Requests
-            changeUserNameRequest,
+            signUpRequest,
+            loginInRequest,
             createLobbyRequest,
             joinLobbyRequest,
             leaveLobbyRequest,
@@ -21,7 +22,7 @@ namespace SharedLibrary.Data
             // Responses
             successResponse,
             errorResponse,
-            nameChangedResponse,
+            userInfoResponse,
             lobbyInfoResponse,
             lobbiesInfoResponse,
             userJoinedToLobbyResponse,
@@ -34,11 +35,18 @@ namespace SharedLibrary.Data
         public object dataObjectInfo { get; private set; }
 
         // Requests
-        public static DataObject changeUserNameRequest(string userName)
+        public static DataObject signUpRequest(string userName, string password)
         {
             DataObject result = new DataObject();
-            result.dataObjectType = DataObjectTypes.changeUserNameRequest;
-            result.dataObjectInfo = new ChangeUserName(userName);
+            result.dataObjectType = DataObjectTypes.signUpRequest;
+            result.dataObjectInfo = new SignUp(userName, password);
+            return result;
+        }
+        public static DataObject loginInRequest(string userName, string password)
+        {
+            DataObject result = new DataObject();
+            result.dataObjectType = DataObjectTypes.loginInRequest;
+            result.dataObjectInfo = new LoginIn(userName, password);
             return result;
         }
         public static DataObject createLobbyRequest(string lobbyName, int lobbyCapacity, string lobbyPassword)
@@ -71,25 +79,25 @@ namespace SharedLibrary.Data
         }
 
         // Responses
-        public static DataObject successResponse()
+        public static DataObject successResponse(string successString)
         {
             DataObject result = new DataObject();
             result.dataObjectType = DataObjectTypes.successResponse;
-            result.dataObjectInfo = null;
+            result.dataObjectInfo = successString;
             return result;
         }
-        public static DataObject errorResponse()
+        public static DataObject errorResponse(string errorString)
         {
             DataObject result = new DataObject();
             result.dataObjectType = DataObjectTypes.errorResponse;
-            result.dataObjectInfo = null;
+            result.dataObjectInfo = errorString;
             return result;
         }
-        public static DataObject nameChangedResponse(string userJson)
+        public static DataObject userInfoResponse(string userJson)
         {
             DataObject result = new DataObject();
-            result.dataObjectType = DataObjectTypes.nameChangedResponse;
-            result.dataObjectInfo = new NameChanged(userJson);
+            result.dataObjectType = DataObjectTypes.userInfoResponse;
+            result.dataObjectInfo = new UserInfo(userJson);
             return result;
         }
         public static DataObject lobbyInfoResponse(string lobbyJson)

@@ -109,6 +109,7 @@
     <Compile Include="MVVM\ViewModel\FindLobbyViewModel.cs" />
     <Compile Include="MVVM\ViewModel\LobbyViewModel.cs" />
     <Compile Include="MVVM\ViewModel\SettingsViewModel.cs" />
+    <Compile Include="MVVM\ViewModel\SignUpViewModel.cs" />
     <Compile Include="MVVM\ViewModel\WebCamBannerViewModel.cs" />
     <Compile Include="MVVM\View\CreateLobbyView.xaml.cs">
       <DependentUpon>CreateLobbyView.xaml</DependentUpon>
@@ -121,6 +122,9 @@
     </Compile>
     <Compile Include="MVVM\View\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MVVM\View\SignUpView.xaml.cs">
+      <DependentUpon>SignUpView.xaml</DependentUpon>
     </Compile>
     <Compile Include="MVVM\View\WebCamBannerView.xaml.cs">
       <DependentUpon>WebCamBannerView.xaml</DependentUpon>
@@ -162,6 +166,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="MVVM\View\SettingsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MVVM\View\SignUpView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

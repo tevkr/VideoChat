@@ -6,10 +6,10 @@ using WPFClient.Core;
 
 namespace WPFClient.MVVM.ViewModel
 {
-    class FirstLoadViewModel : ObservableObject
+    class SignUpViewModel : ObservableObject
     {
-        public AsyncRelayCommand loginInCommand { get; set; }
-        public static RelayCommand switchToSignUpCommand { get; set; }
+        public AsyncRelayCommand signUpCommand { get; set; }
+        public static RelayCommand switchToLoginInCommand { get; set; }
 
         private string _userNameTextBoxText;
         public string userNameTextBoxText
@@ -31,21 +31,21 @@ namespace WPFClient.MVVM.ViewModel
                 OnPropertyChanged(nameof(passwordTextBoxText));
             }
         }
-        public FirstLoadViewModel()
+        public SignUpViewModel()
         {
             userNameTextBoxText = "";
             passwordTextBoxText = "";
-            loginInCommand = new AsyncRelayCommand(async (o) => await loginInCommandTask(o));
-            switchToSignUpCommand = new RelayCommand(o =>
+            signUpCommand = new AsyncRelayCommand(async (o) => await signUpCommandTask(o));
+            switchToLoginInCommand = new RelayCommand(o =>
             {
-                MainViewModel.currentView = MainViewModel.signUpViewModel;
+                MainViewModel.currentView = MainViewModel.firstLoadViewModel;
             });
         }
-        private async Task loginInCommandTask(object o)
+        private async Task signUpCommandTask(object o)
         {
             var task = Task.Factory.StartNew(() =>
             {
-                Server.sendTcp(DataObject.loginInRequest(_userNameTextBoxText, _passwordTextBoxText));
+                Server.sendTcp(DataObject.signUpRequest(_userNameTextBoxText, _passwordTextBoxText));
                 DataObject receivedDataObject = Server.listenToServerTcpResponse();
                 if (receivedDataObject.dataObjectType == DataObject.DataObjectTypes.userInfoResponse)
                 {
@@ -59,7 +59,7 @@ namespace WPFClient.MVVM.ViewModel
                     var errorMessage = receivedDataObject.dataObjectInfo as string;
                     MessageBox.Show($"ServerSide error: {errorMessage}");
                 }
-                else 
+                else
                 {
                     MessageBox.Show("Невозможно отправить данные на сервер.");
                 }
